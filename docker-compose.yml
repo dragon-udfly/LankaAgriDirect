@@ -1,0 +1,35 @@
+services:
+  # MongoDB Service
+  mongodb:
+    image: mongo:latest
+    container_name: lanka-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # Spring Boot Backend
+  backend:
+    build: ./backend
+    container_name: lanka-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+    environment:
+      # We use the service name 'mongodb' as the hostname
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/lanka_db
+      # Use your env variable from earlier
+      - SYSTEM_NAME=Lanka Agri Direct
+
+  # React Web Frontend
+  web-app:
+    build: ./web-app
+    container_name: lanka-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
