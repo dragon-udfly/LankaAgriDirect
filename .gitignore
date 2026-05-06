@@ -34,3 +34,5 @@ mobile-app/.expo/
 
 # --- Docker ---
 .docker/
+
+*.bkp
