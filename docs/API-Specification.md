@@ -160,6 +160,12 @@ This document defines the RESTful API specification for the Lanka Agri-Direct ba
 
 ## 4. API Endpoints
 
+- Common group (Request Mapping)
+
+```
+api/v1
+```
+
 ### 4.1 Authentication
 
 #### 4.1.1 Register Producer
