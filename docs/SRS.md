@@ -11,12 +11,14 @@
 
 ### 1.2 Scope
 
-- Development of a mobile-responsive React Native application for producers and buyers.
-- Stock management and digital reservation for four specific categories,
+- Development of a unified mobile application for producers, anonymous buyers, and system administrators. The app will feature stock management, nationwide search, and an administrative verification portal
+- Available categories,
   - Herbal Products
   - Vegetables
   - Fruits
   - Rice
+  - Fish
+  - Meat
 - Support for two physical fulfillment methods,
   - Self-Pickup
   - Cash on Delivery (COD)
@@ -28,10 +30,7 @@
 
 1. Producer (Farmer) - adds and manage products
 2. Buyer (consumer) - find product and contact seller
-3. System User
-
-- Admin - manage system, manage moderators, verify system operations
-- Moderator - manage products and producers, verify products and producers
+3. Admin- System user who manages system works
 
 ## 3. Functional Requirements (FR)
 
@@ -46,6 +45,7 @@ FR-04 | User Authentication | Ability to log in and verify account.
 FR-05 | Account Update | Ability to update account details.
 FR-06 | Account Deletion | Ability to delete account and user details.
 FR-07 | Connectivity | Ability to notify user about internet disconnectivity (internet required).
+FR-08 | Buying Products | Ability to buy product using the platform like for buyers.
 
 ### 3.2 Buyers' Requirements
 
@@ -95,7 +95,7 @@ DR-08 | Local Store Data | (Client-Side Only): producerId, storeTitle, profilePi
 
 ID | Description
 :--- | :---
-C-01 | The system must be developed using React Native (Frontend), Spring Boot (Backend), and MongoDB (Database).
+C-01 | The entire system interface (Producer, Buyer, and Admin/Moderator) must be developed using React Native. The backend will be Spring Boot, and the database will be MongoDB.
 C-02 | The user interface is strictly limited to English, which may affect accessibility for non-English speaking users in the region.
 C-03 | The platform is localized exclusively for Sri Lanka.
 C-04 | It does not process financial transactions between buyers and sellers, meaning "Buyer Protection" or "Refunds" cannot be managed digitally.
