@@ -22,14 +22,7 @@ services:
       # Use your env variable from earlier
       - SYSTEM_NAME=Lanka Agri Direct
 
-  # React Web Frontend
-  web-app:
-    build: ./web-app
-    container_name: lanka-web
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+
 
 volumes:
   mongo_data:
