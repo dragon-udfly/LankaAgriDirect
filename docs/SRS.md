@@ -83,7 +83,7 @@ NFR-06 | Data Security | Protecting the phone numbers and locations of farmers a
 ID | Entity | Key Attributes
 :--- | :--- | :---
 DR-01 | User-Producer | producerId, firstName, lastName, nic, nicPhotoUrl, profilePictureUrl, businessPhone, mobilePhone, email(opt), storeTitle, operatingDays(array), startTime, endTime, latitude, longitude, locationDescription, homeAddress, storeAddress, district, province, gnDivision, businessType, verificationStatus, password, isDeleted, createdAt, modifiedAt
-DR-02 | Producer Bank Details | detailId, producerId, accountHolderName, bankName, branchCode, accountNumber (Encrypted)
+~~DR-02~~ | ~~Producer Bank Details~~ | ~~detailId, producerId, accountHolderName, bankName, branchCode, accountNumber (Encrypted)~~
 DR-03 | Product | productId, producerId, name, category, description, unitPrice, unitType, imageUrls, isSoldOut(bool), productStatus (active, suspended), isDeleted, createdAt, modifiedAt
 DR-04 | Lead Analytics | leadId, productId, producerId, timestamp, actionType (e.g., "Clicked Call", "Viewed Address")
 DR-05 | Admin | adminId, name, username, password, isDeleted, createdAt, modifiedAt
