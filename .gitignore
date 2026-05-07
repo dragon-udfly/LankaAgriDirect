@@ -36,3 +36,10 @@ mobile-app/.expo/
 .docker/
 
 *.bkp
+
+# --- Environment Variables ---
+.env
+.env.*.local
+
+docs/plan.md
+docs/log.md
