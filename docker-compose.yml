@@ -22,7 +22,14 @@ services:
       # Use your env variable from earlier
       - SYSTEM_NAME=Lanka Agri Direct
 
-
+  # Admin Web Dashboard
+  admin-web:
+    build: ./admin-web
+    container_name: lanka-admin-web
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
 volumes:
   mongo_data:
