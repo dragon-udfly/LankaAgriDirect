@@ -1,4 +1,8 @@
 {
   "name": "LankaAgriDirectApp",
-  "displayName": "LankaAgriDirectApp"
+  "displayName": "LankaAgriDirectApp",
+  "expo": {
+    "name": "LankaAgriDirectApp",
+    "slug": "LankaAgriDirectApp"
+  }
 }

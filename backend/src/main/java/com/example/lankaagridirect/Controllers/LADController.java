@@ -1,17 +1,20 @@
 package com.example.lankaagridirect.Controllers;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
+import com.example.lankaagridirect.DTOs.response.ApiResponse;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Health check endpoint — confirms the backend is running.
+ */
 @RestController
-@RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:3000") // Allow your Vite dev server
+@RequestMapping("/api/v1")
 public class LADController {
 
-    @GetMapping("/hello")
-    public String sayHello() {
-        return "Hello from Spring Boot!";
+    @GetMapping("/health")
+    public ResponseEntity<ApiResponse> health() {
+        return ResponseEntity.ok(new ApiResponse("Lanka Agri-Direct API is running."));
     }
 }
