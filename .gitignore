@@ -41,5 +41,5 @@ mobile-app/.expo/
 .env
 .env.*.local
 
-docs/plan.md
+# --- Logs ---
 docs/log.md
