@@ -46,5 +46,8 @@
 - **Project Configuration:**
   - Added `docs/log.md` to `.gitignore`.
   - Updated `backend/src/main/resources/application.properties` to use the `SPRING_DATA_MONGODB_URI` environment variable, fixing the "Connection Refused" error between the backend and MongoDB containers.
-
+- **Docker Configuration Fixes:**
+  - Fixed `backend/Dockerfile` by adding `WORKDIR /app` and utilizing `mvn dependency:go-offline` to ensure dependencies are properly downloaded before packaging.
+  - Fixed `admin-web/Dockerfile` by changing `COPY package.json package-lock.json ./` to `COPY package*.json ./` to prevent build failures when `package-lock.json` is missing.
+  - Updated `docker-compose.yml` to include `restart: unless-stopped` for MongoDB, and `restart: on-failure` for the backend and admin-web containers to increase resilience during startup.
 
