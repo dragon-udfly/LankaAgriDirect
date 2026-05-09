@@ -19,9 +19,10 @@ services:
     depends_on:
       - mongodb
     environment:
-      # We use the service name 'mongodb' as the hostname
-      - MONGO_URI=${MONGO_URI}
-      # Use your env variable from earlier
+      # Use standard Spring Boot environment variable (overrides application.properties)
+      - SPRING_DATA_MONGODB_URI=${MONGO_URI}
+      - SPRING_SECURITY_USER_NAME=admin
+      - SPRING_SECURITY_USER_PASSWORD=${JWT_SECRET} # Just to suppress the random warning
       - SYSTEM_NAME=Lanka Agri Direct
       # Inject Secrets from .env
       - JWT_SECRET=${JWT_SECRET}
