@@ -91,13 +91,12 @@ const LoginScreen = ({navigation}) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.guestLink}
-            onPress={() => navigation.navigate('BuyerTabs')}>
-            <Text style={styles.guestText}>
-              Browse as Guest (Buyer) →
-            </Text>
-          </TouchableOpacity>
+          <AppButton
+            title="Browse Products"
+            variant="accent-outline"
+            onPress={() => navigation.navigate('BuyerTabs')}
+            style={styles.browseButton}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -148,8 +147,7 @@ const styles = StyleSheet.create({
   registerLink: {marginTop: SPACING.md, alignItems: 'center'},
   registerText: {fontSize: 14, color: COLORS.textSecondary},
   registerBold: {color: COLORS.primary, ...FONTS.semiBold},
-  guestLink: {marginTop: SPACING.sm, alignItems: 'center'},
-  guestText: {fontSize: 14, color: COLORS.accent, ...FONTS.medium},
+  browseButton: {marginTop: SPACING.xl},
 });
 
 export default LoginScreen;

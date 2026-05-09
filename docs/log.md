@@ -54,4 +54,9 @@
   - Resolved MongoDB connection issue by switching to the standard `SPRING_DATA_MONGODB_URI` environment variable in `docker-compose.yml`.
   - Suppressed the "Generated Security Password" warning by explicitly setting a security user in the environment.
   - Cleaned up `application.properties` to rely on Spring Boot's environment variable precedence.
+- **Mobile App UI Updates:**
+  - Updated `LoginScreen.js` to exactly match the provided design mockup.
+  - Replaced the plain "Browse as Guest (Buyer)" text link with a full-width outlined button labeled "Browse Products".
+  - Enhanced `AppButton.js` by adding a new `accent-outline` variant to support the orange/amber border and text style required by the new design.
+  - Adjusted spacing (`marginTop: SPACING.xl`) between the registration link and the browse products button for better visual hierarchy.
 
