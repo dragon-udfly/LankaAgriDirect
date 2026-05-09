@@ -59,4 +59,6 @@
   - Replaced the plain "Browse as Guest (Buyer)" text link with a full-width outlined button labeled "Browse Products".
   - Enhanced `AppButton.js` by adding a new `accent-outline` variant to support the orange/amber border and text style required by the new design.
   - Adjusted spacing (`marginTop: SPACING.xl`) between the registration link and the browse products button for better visual hierarchy.
+- **Backend Configuration Updates:**
+  - Updated `application.properties` to add `http://localhost:8081` to `app.cors.allowed-origins` to prevent CORS blocking when the mobile app is run in a web browser via Expo.
 
