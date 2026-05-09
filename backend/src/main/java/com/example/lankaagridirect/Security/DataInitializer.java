@@ -15,7 +15,8 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner initData(AdminRepository adminRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            if (adminRepository.countByIsDeletedFalse() == 0) {
+            System.out.println("--- Starting Data Initialization ---");
+            if (!adminRepository.existsByUsername("admin")) {
                 Admin admin = new Admin();
                 admin.setName("System Admin");
                 admin.setUsername("admin");
@@ -25,8 +26,11 @@ public class DataInitializer {
                 admin.setModifiedAt(LocalDateTime.now());
                 
                 adminRepository.save(admin);
-                System.out.println("Default admin account created: admin / admin123");
+                System.out.println(">>> SEEDER: Default admin account created: admin / admin123");
+            } else {
+                System.out.println(">>> SEEDER: Admin account already exists. Skipping creation.");
             }
+            System.out.println("--- Data Initialization Complete ---");
         };
     }
 }

@@ -19,10 +19,11 @@ services:
     depends_on:
       - mongodb
     environment:
-      # Use standard Spring Boot environment variable (overrides application.properties)
-      - SPRING_DATA_MONGODB_URI=${MONGO_URI}
+      # Database — must use Docker service name 'mongodb', not 'localhost'
+      - MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db
+      # Suppress the "generated security password" warning
       - SPRING_SECURITY_USER_NAME=admin
-      - SPRING_SECURITY_USER_PASSWORD=${JWT_SECRET} # Just to suppress the random warning
+      - SPRING_SECURITY_USER_PASSWORD=${JWT_SECRET}
       - SYSTEM_NAME=Lanka Agri Direct
       # Inject Secrets from .env
       - JWT_SECRET=${JWT_SECRET}

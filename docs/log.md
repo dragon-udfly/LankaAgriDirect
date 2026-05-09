@@ -61,6 +61,11 @@
   - Adjusted spacing (`marginTop: SPACING.xl`) between the registration link and the browse products button for better visual hierarchy.
 - **Backend Configuration Updates:**
   - Updated `application.properties` to add `http://localhost:8081` to `app.cors.allowed-origins` to prevent CORS blocking when the mobile app is run in a web browser via Expo.
-  - Created `DataInitializer.java` to seed a default admin account (`admin` / `admin123`) on startup if no admin account exists, enabling initial login to the admin dashboard.
+  - Created `DataInitializer.java` to seed a default admin account (`admin` / `admin123`) on startup if it doesn't already exist, with improved logging to verify the creation process.
+- **Critical Fix — MongoDB Connection (localhost:27017 error):**
+  - **Root Cause:** Commenting out `spring.data.mongodb.uri` in `application.properties` caused Spring Boot to use its default `localhost:27017`, ignoring the `SPRING_DATA_MONGODB_URI` environment variable.
+  - **Fix 1:** Restored `spring.data.mongodb.uri=${MONGO_URI:mongodb://localhost:27017/lankaagridirect_db}` in `application.properties`. This reads the `MONGO_URI` env var when in Docker, and falls back to `localhost` for local development.
+  - **Fix 2:** Changed `docker-compose.yml` to inject `MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db` directly (hardcoded) instead of referencing `.env`, eliminating the indirection that was silently breaking.
+
 
 
