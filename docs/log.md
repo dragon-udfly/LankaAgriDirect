@@ -50,4 +50,9 @@
   - Fixed `backend/Dockerfile` by adding `WORKDIR /app` and utilizing `mvn dependency:go-offline` to ensure dependencies are properly downloaded before packaging.
   - Fixed `admin-web/Dockerfile` by changing `COPY package.json package-lock.json ./` to `COPY package*.json ./` to prevent build failures when `package-lock.json` is missing.
   - Updated `docker-compose.yml` to include `restart: unless-stopped` for MongoDB, and `restart: on-failure` for the backend and admin-web containers to increase resilience during startup.
+- **Secret Management:**
+  - Implemented a 3-tier secret management setup (.env -> docker-compose -> application.properties).
+  - Extracted JWT and Cloudinary credentials into a `.env` file.
+  - Updated `docker-compose.yml` to pass `.env` variables to the backend container.
+  - Updated `application.properties` to read secrets via placeholders like `${JWT_SECRET}`.
 

@@ -20,9 +20,14 @@ services:
       - mongodb
     environment:
       # We use the service name 'mongodb' as the hostname
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/lanka_db
+      - MONGO_URI=${MONGO_URI}
       # Use your env variable from earlier
       - SYSTEM_NAME=Lanka Agri Direct
+      # Inject Secrets from .env
+      - JWT_SECRET=${JWT_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
 
   # Admin Web Dashboard
   admin-web:
