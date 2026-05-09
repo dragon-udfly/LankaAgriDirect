@@ -65,7 +65,17 @@
 - **Critical Fix — MongoDB Connection (localhost:27017 error):**
   - **Root Cause:** Commenting out `spring.data.mongodb.uri` in `application.properties` caused Spring Boot to use its default `localhost:27017`, ignoring the `SPRING_DATA_MONGODB_URI` environment variable.
   - **Fix 1:** Restored `spring.data.mongodb.uri=${MONGO_URI:mongodb://localhost:27017/lankaagridirect_db}` in `application.properties`. This reads the `MONGO_URI` env var when in Docker, and falls back to `localhost` for local development.
-  - **Fix 2:** Changed `docker-compose.yml` to inject `MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db` directly (hardcoded) instead of referencing `.env`, eliminating the indirection that was silently breaking.
+  - **Fix 2:** Changed `docker-compose.yml` to inject `MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db` directly (hardcoded), eliminating the indirection that was silently breaking.
+- **Admin Seeding — Replaced Java DataInitializer with MongoDB Init Script:**
+  - **Root Cause of crash:** `DataInitializer.java` ran at Spring Boot startup and queried MongoDB before the connection was established, causing a `MongoTimeoutException` that crashed the app.
+  - **Fix:** Created `init-mongo.js` at project root, which MongoDB runs automatically on first container creation via `/docker-entrypoint-initdb.d/`. This inserts a pre-hashed admin document into the `admins` collection before the backend ever starts.
+  - Mounted `init-mongo.js` in `docker-compose.yml` under `mongodb` service volumes.
+  - Emptied `DataInitializer.java` to a comment-only file (seeding logic removed).
+  - Removed misleading `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` env vars from `docker-compose.yml`.
+  - Updated `SecurityConfig.java` to define an explicit empty `UserDetailsService`, suppressing Spring Security's automatic password generation and cleaning up startup logs.
+  - **Default Admin Credentials:** username `admin` / password `admin123` (BCrypt hashed in DB).
+
+
 
 
 

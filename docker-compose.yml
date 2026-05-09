@@ -8,6 +8,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      # Seed script: runs once on first-time DB creation
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
 
   # Spring Boot Backend
   backend:
@@ -21,10 +23,6 @@ services:
     environment:
       # Database — must use Docker service name 'mongodb', not 'localhost'
       - MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db
-      # Suppress the "generated security password" warning
-      - SPRING_SECURITY_USER_NAME=admin
-      - SPRING_SECURITY_USER_PASSWORD=${JWT_SECRET}
-      - SYSTEM_NAME=Lanka Agri Direct
       # Inject Secrets from .env
       - JWT_SECRET=${JWT_SECRET}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
