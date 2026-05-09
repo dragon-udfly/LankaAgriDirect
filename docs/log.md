@@ -61,4 +61,6 @@
   - Adjusted spacing (`marginTop: SPACING.xl`) between the registration link and the browse products button for better visual hierarchy.
 - **Backend Configuration Updates:**
   - Updated `application.properties` to add `http://localhost:8081` to `app.cors.allowed-origins` to prevent CORS blocking when the mobile app is run in a web browser via Expo.
+  - Created `DataInitializer.java` to seed a default admin account (`admin` / `admin123`) on startup if no admin account exists, enabling initial login to the admin dashboard.
+
 
