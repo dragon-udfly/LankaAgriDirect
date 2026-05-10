@@ -157,11 +157,18 @@ const AddProductScreen = ({navigation, route}) => {
     }
   };
 
+  const Wrapper = Platform.OS === 'web' ? View : KeyboardAvoidingView;
+  const wrapperProps = Platform.OS === 'web'
+    ? {style: styles.webWrapper}
+    : {style: styles.container, behavior: 'padding'};
+
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <Wrapper {...wrapperProps}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={Platform.OS === 'web' ? {flex: 1} : undefined}>
         <AlertBox message={error} type="error" />
         <AlertBox message={success} type="success" />
 
@@ -243,13 +250,26 @@ const AddProductScreen = ({navigation, route}) => {
           style={styles.submitBtn}
         />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </Wrapper>
   );
 };
 
 const styles = StyleSheet.create({
   flex: {flex: 1, backgroundColor: COLORS.background},
-  container: {padding: SPACING.lg, paddingBottom: SPACING.xxl},
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  webWrapper: {
+    height: '100vh',
+    backgroundColor: COLORS.background,
+    overflow: 'hidden',
+  },
+  scroll: {
+    flexGrow: 1,
+    padding: SPACING.lg,
+    paddingBottom: 60,
+  },
   pillSection: {marginBottom: SPACING.md},
   pillLabel: {fontSize: 14, ...FONTS.medium, color: COLORS.text, marginBottom: SPACING.sm},
   pillRow: {flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm},

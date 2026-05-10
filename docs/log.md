@@ -120,3 +120,8 @@
     - Fixed the "Could not load profile" bug in `AccountSettingsScreen.js` by replacing an undefined `getMe()` API call with the correct `getMyProfile()` function.
     - Expanded the UI form and `UpdateProfileRequest.java` DTO to support missing fields: `Province`, `District`, `GN Division`, and `Business Type`.
     - Integrated `ProducerAuditLogRepository` into `AuthService.java`. The system now automatically generates and persists an immutable `"UPDATE_PROFILE"` audit log entry every time a producer updates their settings.
+  - **Platform & Stability Fixes:**
+    - Resolved widespread scrolling issues on Expo Web by implementing a custom `Wrapper` and bounded `ScrollView` height pattern across `RegisterScreen.js`, `AccountSettingsScreen.js`, and `AddProductScreen.js`.
+    - Increased Spring Boot multipart file size limit to **10MB** to support high-resolution image uploads.
+    - Added comprehensive try-catch logging to `ImageUploadController.java` to provide detailed error feedback for Cloudinary failures.
+    - Fixed `AppInput.js` to disable default browser focus outlines, resolving the "thick black border" visual bug on web.
