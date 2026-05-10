@@ -63,10 +63,14 @@ const HomeScreen = ({navigation}) => {
   );
 
   useEffect(() => {
-    setLoading(true);
-    setPage(1);
-    fetchProducts(true);
-  }, [selectedCategory]);
+    const delayDebounceFn = setTimeout(() => {
+      setLoading(true);
+      setPage(1);
+      fetchProducts(true);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [selectedCategory, searchQuery]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -83,14 +87,21 @@ const HomeScreen = ({navigation}) => {
       <View style={styles.searchBar}>
         <Ionicons name="search" size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[
+            styles.searchInput,
+            Platform.OS === 'web' && {outlineStyle: 'none'}
+          ]}
           placeholder="Search fresh produce..."
           placeholderTextColor={COLORS.textLight}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          onSubmitEditing={() => fetchProducts(true)}
           returnKeyType="search"
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={18} color={COLORS.textLight} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Category Chips */}
@@ -179,7 +190,11 @@ const HomeScreen = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: COLORS.background},
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    height: Platform.OS === 'web' ? '100vh' : '100%',
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
