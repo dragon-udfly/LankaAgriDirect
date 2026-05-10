@@ -38,6 +38,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public org.springframework.security.core.userdetails.UserDetailsService userDetailsService() {
+        return new org.springframework.security.provisioning.InMemoryUserDetailsManager();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
@@ -53,6 +58,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,  "/api/v1/producers/**").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/api/v1/map/**").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/api/v1/categories").permitAll()
+                .requestMatchers(HttpMethod.GET,  "/api/v1/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/analytics/call").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/analytics/address").permitAll()
 

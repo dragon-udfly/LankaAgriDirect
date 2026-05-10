@@ -19,10 +19,14 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   res => res,
   err => {
-    const msg =
-      err.response?.data?.message ||
-      err.response?.data?.error?.message ||
-      'An unexpected error occurred.';
+    let msg = 'An unexpected error occurred.';
+    
+    if (!err.response) {
+      msg = 'Network Error: Cannot connect to the server. Please check if the backend is running.';
+    } else {
+      msg = err.response?.data?.message || err.response?.data?.error?.message || msg;
+    }
+
     return Promise.reject({
       status: err.response?.status ?? 0,
       message: msg,
