@@ -87,4 +87,4 @@
   - **RegisterScreen.js (Scrolling Fix):** Fixed the Create Account screen not being scrollable on web browsers. Replaced `KeyboardAvoidingView` with a platform-aware `Wrapper` that uses a `View` with `height: '100vh'` on web (bounding the container height), while preserving `KeyboardAvoidingView` behavior on iOS/Android. Added `flex: 1` to the `ScrollView` style on web and increased bottom padding to 60px to ensure all form fields are reachable.
   - **LoginScreen.js (Shadow Deprecation Fix):** Replaced deprecated inline `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius` style props in the card style with the platform-aware `SHADOW.md` utility from `theme/colors.js`, which uses `boxShadow` on web and native shadow props on mobile. This eliminates the `"shadow*" style props are deprecated` browser console warning.
   - Added `SHADOW` to the imports in `LoginScreen.js`.
-
+  - **SecurityConfig.java (Health Check Fix):** Added `/api/v1/health` to the list of fully public endpoints in the Spring Security Configuration. This fixes the 403 Forbidden error when accessing the health check endpoint.
