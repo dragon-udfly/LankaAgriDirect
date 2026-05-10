@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import {COLORS, SPACING, FONTS} from '../../theme/colors';
 import AppInput from '../../components/AppInput';
@@ -14,19 +14,51 @@ import AppButton from '../../components/AppButton';
 import AlertBox from '../../components/AlertBox';
 import {registerProducer} from '../../api/authApi';
 import {useAuth} from '../../context/AuthContext';
+import Geolocation from '@react-native-community/geolocation';
 
 const RegisterScreen = ({navigation}) => {
   const [formData, setFormData] = useState({
-    name: '',
-    phoneNumber: '',
+    firstName: '',
+    lastName: '',
+    nic: '',
+    businessPhone: '',
+    email: '',
+    storeTitle: '',
+    operatingDays: '', 
+    startTime: '',
+    endTime: '',
+    homeAddress: '',
+    district: '',
+    province: '',
+    gnDivision: '',
+    businessType: 'small-scale',
     password: '',
-    address: '',
-    nicPhotoUrl: 'https://via.placeholder.com/150', // Placeholder for MVP
+    latitude: null,
+    longitude: null,
+    nicPhotoUrl: 'https://via.placeholder.com/150', // Placeholder
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const {signIn} = useAuth();
+
+  const getLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        setFormData(prev => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }));
+        alert('Location acquired successfully!');
+      },
+      error => {
+        alert('Error getting location: ' + error.message);
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
+  };
 
   const handleRegister = async () => {
     setLoading(true);
@@ -34,8 +66,16 @@ const RegisterScreen = ({navigation}) => {
     setFieldErrors({});
 
     try {
-      // Create user and auto-login with response token
-      const res = await registerProducer(formData);
+      const daysArray = formData.operatingDays
+        ? formData.operatingDays.split(',').map(day => day.trim()).filter(day => day.length > 0)
+        : [];
+
+      const payload = {
+        ...formData,
+        operatingDays: daysArray,
+      };
+
+      const res = await registerProducer(payload);
       await signIn(res.data);
     } catch (err) {
       setError(err.message || 'Failed to register account');
@@ -45,46 +85,201 @@ const RegisterScreen = ({navigation}) => {
     }
   };
 
+  const setField = (field, value) => {
+    setFormData(prev => ({...prev, [field]: value}));
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={styles.title}>Create Account</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView 
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join Lanka Agri-Direct as a Producer</Text>
 
           {error && <AlertBox type="error" message={error} style={styles.alert} />}
 
           <View style={styles.form}>
+            <View style={styles.row}>
+              <View style={styles.halfInput}>
+                <AppInput
+                  label="First Name"
+                  placeholder="John"
+                  value={formData.firstName}
+                  onChangeText={val => setField('firstName', val)}
+                  error={fieldErrors.firstName}
+                />
+              </View>
+              <View style={styles.halfInput}>
+                <AppInput
+                  label="Last Name"
+                  placeholder="Doe"
+                  value={formData.lastName}
+                  onChangeText={val => setField('lastName', val)}
+                  error={fieldErrors.lastName}
+                />
+              </View>
+            </View>
+
             <AppInput
-              label="Full Name"
-              placeholder="e.g. John Doe"
-              value={formData.name}
-              onChangeText={val => setFormData({...formData, name: val})}
-              error={fieldErrors.name}
+              label="NIC"
+              placeholder="e.g. 123456789V"
+              value={formData.nic}
+              onChangeText={val => setField('nic', val)}
+              error={fieldErrors.nic}
             />
+
             <AppInput
-              label="Phone Number"
+              label="Business Phone"
               placeholder="07XXXXXXXX"
               keyboardType="phone-pad"
-              value={formData.phoneNumber}
-              onChangeText={val => setFormData({...formData, phoneNumber: val})}
-              error={fieldErrors.phoneNumber}
+              value={formData.businessPhone}
+              onChangeText={val => setField('businessPhone', val)}
+              error={fieldErrors.businessPhone}
             />
+
             <AppInput
-              label="Address"
-              placeholder="e.g. 123 Main St, Colombo"
-              value={formData.address}
-              onChangeText={val => setFormData({...formData, address: val})}
-              error={fieldErrors.address}
+              label="Email (Optional)"
+              placeholder="john@example.com"
+              keyboardType="email-address"
+              value={formData.email}
+              onChangeText={val => setField('email', val)}
+              error={fieldErrors.email}
             />
+
+            <AppInput
+              label="Store Title"
+              placeholder="e.g. John's Farm"
+              value={formData.storeTitle}
+              onChangeText={val => setField('storeTitle', val)}
+              error={fieldErrors.storeTitle}
+            />
+
+            <AppInput
+              label="Operating Days (Comma separated)"
+              placeholder="e.g. Mon, Tue, Wed"
+              value={formData.operatingDays}
+              onChangeText={val => setField('operatingDays', val)}
+              error={fieldErrors.operatingDays}
+            />
+
+            <View style={styles.row}>
+              <View style={styles.halfInput}>
+                <AppInput
+                  label="Start Time"
+                  placeholder="e.g. 08:00 AM"
+                  value={formData.startTime}
+                  onChangeText={val => setField('startTime', val)}
+                  error={fieldErrors.startTime}
+                />
+              </View>
+              <View style={styles.halfInput}>
+                <AppInput
+                  label="End Time"
+                  placeholder="e.g. 05:00 PM"
+                  value={formData.endTime}
+                  onChangeText={val => setField('endTime', val)}
+                  error={fieldErrors.endTime}
+                />
+              </View>
+            </View>
+
+            <AppInput
+              label="Home Address"
+              placeholder="e.g. 123 Main St"
+              value={formData.homeAddress}
+              onChangeText={val => setField('homeAddress', val)}
+              error={fieldErrors.homeAddress}
+            />
+
+            <View style={styles.row}>
+              <View style={styles.halfInput}>
+                <AppInput
+                  label="District"
+                  placeholder="e.g. Colombo"
+                  value={formData.district}
+                  onChangeText={val => setField('district', val)}
+                  error={fieldErrors.district}
+                />
+              </View>
+              <View style={styles.halfInput}>
+                <AppInput
+                  label="Province"
+                  placeholder="e.g. Western"
+                  value={formData.province}
+                  onChangeText={val => setField('province', val)}
+                  error={fieldErrors.province}
+                />
+              </View>
+            </View>
+
+            <AppInput
+              label="GN Division"
+              placeholder="e.g. Kollupitiya"
+              value={formData.gnDivision}
+              onChangeText={val => setField('gnDivision', val)}
+              error={fieldErrors.gnDivision}
+            />
+
+            <Text style={styles.label}>Business Type</Text>
+            <View style={styles.radioGroup}>
+              <TouchableOpacity
+                style={[
+                  styles.radioBtn,
+                  formData.businessType === 'small-scale' && styles.radioBtnActive,
+                ]}
+                onPress={() => setField('businessType', 'small-scale')}>
+                <Text
+                  style={[
+                    styles.radioText,
+                    formData.businessType === 'small-scale' && styles.radioTextActive,
+                  ]}>
+                  Small Scale
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.radioBtn,
+                  formData.businessType === 'home-gardener' && styles.radioBtnActive,
+                ]}
+                onPress={() => setField('businessType', 'home-gardener')}>
+                <Text
+                  style={[
+                    styles.radioText,
+                    formData.businessType === 'home-gardener' && styles.radioTextActive,
+                  ]}>
+                  Home Gardener
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {fieldErrors.businessType && (
+              <Text style={styles.errorText}>{fieldErrors.businessType}</Text>
+            )}
+
+            <Text style={styles.label}>Location</Text>
+            <View style={styles.locationContainer}>
+              <Text style={styles.locationText}>
+                {formData.latitude && formData.longitude
+                  ? `Lat: ${formData.latitude.toFixed(4)}, Lng: ${formData.longitude.toFixed(4)}`
+                  : 'Location not set'}
+              </Text>
+              <TouchableOpacity style={styles.locationBtn} onPress={getLocation}>
+                <Text style={styles.locationBtnText}>Get Current Location</Text>
+              </TouchableOpacity>
+            </View>
+            {(fieldErrors.latitude || fieldErrors.longitude) && (
+              <Text style={styles.errorText}>Location is required</Text>
+            )}
+
             <AppInput
               label="Password"
               placeholder="Create a password"
               isPassword
               value={formData.password}
-              onChangeText={val => setFormData({...formData, password: val})}
+              onChangeText={val => setField('password', val)}
               error={fieldErrors.password}
             />
 
@@ -94,7 +289,7 @@ const RegisterScreen = ({navigation}) => {
               loading={loading}
               style={styles.submitBtn}
             />
-            
+
             <View style={styles.footer}>
               <Text style={styles.footerText}>Already have an account? </Text>
               <Text
@@ -106,7 +301,6 @@ const RegisterScreen = ({navigation}) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
   );
 };
 
@@ -116,9 +310,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   scroll: {
-    padding: SPACING.xl,
     flexGrow: 1,
-    justifyContent: 'center',
+    padding: SPACING.xl,
+    paddingBottom: 40,
   },
   title: {
     ...FONTS.h1,
@@ -133,11 +327,84 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfInput: {
+    width: '48%',
+  },
+  label: {
+    ...FONTS.body,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    marginTop: SPACING.sm,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    marginBottom: SPACING.md,
+  },
+  radioBtn: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginRight: SPACING.sm,
+  },
+  radioBtnActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryLight || '#e6f4ea',
+  },
+  radioText: {
+    ...FONTS.body,
+    color: COLORS.textLight,
+  },
+  radioTextActive: {
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: SPACING.sm,
+    backgroundColor: COLORS.surface,
+  },
+  locationText: {
+    ...FONTS.body,
+    color: COLORS.text,
+    flex: 1,
+  },
+  locationBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: 6,
+  },
+  locationBtnText: {
+    color: COLORS.white,
+    ...FONTS.body,
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: 12,
+    marginTop: -SPACING.sm,
+    marginBottom: SPACING.md,
+  },
   alert: {
     marginBottom: SPACING.lg,
   },
   submitBtn: {
-    marginTop: SPACING.md,
+    marginTop: SPACING.lg,
   },
   footer: {
     flexDirection: 'row',

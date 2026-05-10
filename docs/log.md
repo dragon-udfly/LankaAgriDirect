@@ -59,6 +59,13 @@
   - Replaced the plain "Browse as Guest (Buyer)" text link with a full-width outlined button labeled "Browse Products".
   - Enhanced `AppButton.js` by adding a new `accent-outline` variant to support the orange/amber border and text style required by the new design.
   - Adjusted spacing (`marginTop: SPACING.xl`) between the registration link and the browse products button for better visual hierarchy.
+  - Overhauled `RegisterScreen.js` to include all fields required by the `ProducerRegisterRequest` DTO (`firstName`, `lastName`, `nic`, `businessPhone`, `storeTitle`, `homeAddress`, `district`, `province`, `gnDivision`, `businessType`, `startTime`, `endTime`, `operatingDays`).
+  - Overhauled `RegisterScreen.js` to include all fields required by the `ProducerRegisterRequest` DTO (`firstName`, `lastName`, `nic`, `businessPhone`, `storeTitle`, `homeAddress`, `district`, `province`, `gnDivision`, `businessType`, `startTime`, `endTime`, `operatingDays`).
+  - Added Geolocation integration (`@react-native-community/geolocation`) in `RegisterScreen.js` to capture and append `latitude` and `longitude` to the registration payload.
+  - Added a custom dual-button selector for `businessType` to restrict selection to valid options (`small-scale` or `home-gardener`).
+  - Formatted the registration payload correctly to parse `operatingDays` from a comma-separated string to an array before submission, resolving `400 Bad Request` errors.
+  - Fixed an issue where the `RegisterScreen` could not be scrolled. For web browsers, replaced the `SafeAreaView` root with a conditional wrapper, and added explicit `height: '100%'` bounding styles to prevent the flex container from growing indefinitely, which enables `overflow-y: auto`.
+  - Improved `ScrollView` behavior by adding `keyboardShouldPersistTaps="handled"` and hiding vertical scroll indicators.
 - **Backend Configuration Updates:**
   - Updated `application.properties` to add `http://localhost:8081` to `app.cors.allowed-origins` to prevent CORS blocking when the mobile app is run in a web browser via Expo.
   - Created `DataInitializer.java` to seed a default admin account (`admin` / `admin123`) on startup if it doesn't already exist, with improved logging to verify the creation process.
