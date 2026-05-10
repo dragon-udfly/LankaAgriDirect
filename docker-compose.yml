@@ -10,6 +10,12 @@ services:
       - mongo_data:/data/db
       # Seed script: runs once on first-time DB creation
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # Spring Boot Backend
   backend:
@@ -19,10 +25,11 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
-      # Database — must use Docker service name 'mongodb', not 'localhost'
-      - MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db
+      # Use Spring Boot canonical env var name — maps directly to spring.data.mongodb.uri
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/lankaagridirect_db
       # Inject Secrets from .env
       - JWT_SECRET=${JWT_SECRET}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
