@@ -28,8 +28,8 @@ services:
       mongodb:
         condition: service_healthy
     environment:
-      # Use Spring Boot canonical env var name — maps directly to spring.data.mongodb.uri
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/lankaagridirect_db
+      # Database — must use Docker service name 'mongodb', not 'localhost'
+      - MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db
       # Inject Secrets from .env
       - JWT_SECRET=${JWT_SECRET}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
