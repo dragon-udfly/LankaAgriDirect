@@ -113,3 +113,6 @@
     - Added `ProducerProfileResponse.java` and `GET /api/v1/auth/me/profile` endpoint to securely transmit all editable fields back to the producer.
   - **Product Management:**
     - Updated `AddProductScreen.js` to natively capture product images via the Cloudinary API when creating or modifying a marketplace listing.
+  - **Buyer Navigation & UI Enhancements:**
+    - Replaced generic emoji-based icons in `BuyerNavigator.js` and `HomeScreen.js` with professional vector icons from `@expo/vector-icons` (`Ionicons`).
+    - Added a global authentication header button in `BuyerNavigator.js`. Guests now see a "Log In" button to enter the authentication flow without being trapped in the Guest view, and logged-in Admins see a "Log Out" button.

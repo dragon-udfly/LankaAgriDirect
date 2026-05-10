@@ -1,34 +1,57 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
-import {Text} from 'react-native';
+import {Text, TouchableOpacity} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import HomeScreen from '../screens/buyer/HomeScreen';
 import ProductDetailScreen from '../screens/buyer/ProductDetailScreen';
 import BookmarksScreen from '../screens/buyer/BookmarksScreen';
 import {COLORS} from '../theme/colors';
+import {useAuth} from '../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-const HomeStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: {backgroundColor: COLORS.primary},
-      headerTintColor: COLORS.white,
-      headerTitleStyle: {fontWeight: '700'},
-    }}>
-    <Stack.Screen
-      name="Home"
-      component={HomeScreen}
-      options={{title: '🌿 Lanka Agri-Direct'}}
-    />
-    <Stack.Screen
-      name="ProductDetail"
-      component={ProductDetailScreen}
-      options={{title: 'Product Details'}}
-    />
-  </Stack.Navigator>
-);
+const HomeStack = () => {
+  const {user, signOut} = useAuth();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {backgroundColor: COLORS.primary},
+        headerTintColor: COLORS.white,
+        headerTitleStyle: {fontWeight: '700'},
+      }}>
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={({navigation}) => ({
+          title: '🌿 Lanka Agri-Direct',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => (user ? signOut() : navigation.navigate('Login'))}
+              style={{
+                marginRight: 16,
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 16,
+              }}>
+              <Text style={{color: COLORS.white, fontWeight: '600', fontSize: 13}}>
+                {user ? 'Log Out' : 'Log In'}
+              </Text>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="ProductDetail"
+        component={ProductDetailScreen}
+        options={{title: 'Product Details'}}
+      />
+    </Stack.Navigator>
+  );
+};
 
 export const BuyerNavigator = () => (
   <Tab.Navigator
@@ -48,7 +71,7 @@ export const BuyerNavigator = () => (
       component={HomeStack}
       options={{
         tabBarLabel: 'Browse',
-        tabBarIcon: ({color}) => <Text style={{fontSize: 20, color}}>🛍️</Text>,
+        tabBarIcon: ({color, size}) => <Ionicons name="cart-outline" size={size} color={color} />,
       }}
     />
     <Tab.Screen
@@ -56,7 +79,7 @@ export const BuyerNavigator = () => (
       component={BookmarksScreen}
       options={{
         tabBarLabel: 'Saved',
-        tabBarIcon: ({color}) => <Text style={{fontSize: 20, color}}>⭐</Text>,
+        tabBarIcon: ({color, size}) => <Ionicons name="bookmark-outline" size={size} color={color} />,
         headerShown: true,
         headerStyle: {backgroundColor: COLORS.primary},
         headerTintColor: COLORS.white,
