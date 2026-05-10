@@ -100,3 +100,16 @@
     - **[HIGH] `backend/pom.xml` — DevTools excluded from production JAR:** Added `<excludeDevtools>true</excludeDevtools>` to the Spring Boot Maven plugin configuration. This ensures `spring-boot-devtools` is stripped from the packaged JAR before deployment to Docker, eliminating any potential interference with property loading.
   - **API Documentation:** Created a comprehensive `API Documentation.md` file in the `docs` folder detailing all endpoints, authentication, request payloads, and response structures for the Spring Boot backend.
   - **Installation Guide:** Created a comprehensive `Installation & Setup Guide.md` file in the `docs` folder providing clear, step-by-step instructions on cloning the repository, setting up environment variables, running the Docker containers, and starting the mobile application.
+  - **Producer Registration Workflow Finalized:**
+    - Integrated Cloudinary for secure, cloud-based image storage. Updated `application.properties` and added `CloudinaryConfig.java` to support uploads using environment variables.
+    - Created an open `POST /api/v1/upload/image` endpoint in `ImageUploadController.java` returning a secure Cloudinary URL upon successful multipart file upload.
+    - Built a cross-platform helper `cloudinaryUpload.js` to manage direct image uploads from the React Native app.
+    - Overhauled `RegisterScreen.js` UI and logic to capture a profile picture and front/rear NIC photos. After successful registration, it redirects the user directly to the Login screen.
+  - **Producer Dashboard & Settings:**
+    - Refactored `AuthResponse` and `AuthService` to include the `profilePictureUrl` upon authentication.
+    - Updated the global `AuthContext` to support a `refreshUser()` function for seamlessly syncing profile changes without requiring re-authentication.
+    - Enhanced `DashboardScreen.js` to fetch and render the user's profile picture alongside analytical statistics, and correctly linked the "Account Settings" action button.
+    - Created a brand-new `AccountSettingsScreen.js` to allow producers to edit all personal and business profile fields, change passwords, change profile picture, and initiate account deletion.
+    - Added `ProducerProfileResponse.java` and `GET /api/v1/auth/me/profile` endpoint to securely transmit all editable fields back to the producer.
+  - **Product Management:**
+    - Updated `AddProductScreen.js` to natively capture product images via the Cloudinary API when creating or modifying a marketplace listing.
