@@ -88,3 +88,7 @@
   - **LoginScreen.js (Shadow Deprecation Fix):** Replaced deprecated inline `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius` style props in the card style with the platform-aware `SHADOW.md` utility from `theme/colors.js`, which uses `boxShadow` on web and native shadow props on mobile. This eliminates the `"shadow*" style props are deprecated` browser console warning.
   - Added `SHADOW` to the imports in `LoginScreen.js`.
   - **SecurityConfig.java (Health Check Fix):** Added `/api/v1/health` to the list of fully public endpoints in the Spring Security Configuration. This fixes the 403 Forbidden error when accessing the health check endpoint.
+  - **Admin Web Login Fixes:**
+    - Restored `DataInitializer.java` to guarantee the default `admin` user is seeded on Spring Boot startup, bypassing Docker volume cache issues where `init-mongo.js` might not execute.
+    - Updated `application.properties` to include `127.0.0.1` origins in `app.cors.allowed-origins` to prevent CORS blocking if accessed via IP instead of `localhost`.
+    - Improved Axios error handling in `adminApi.ts` to display a clear "Network Error: Cannot connect to the server" message when the backend is unreachable, instead of a vague "unexpected error".
