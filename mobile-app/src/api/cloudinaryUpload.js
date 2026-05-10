@@ -28,24 +28,33 @@ export const uploadImage = async (imageSource) => {
     });
   }
 
-  const headers = {
-    'Content-Type': 'multipart/form-data',
-  };
+  const headers = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}/upload/image`, {
-    method: 'POST',
-    headers,
-    body: formData,
-  });
+  try {
+    const response = await fetch(`${BASE_URL}/upload/image`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Image upload failed');
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Image upload failed';
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server returned ${response.status}: ${errorText.substring(0, 50)}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    return data.url;
+  } catch (err) {
+    throw new Error(err.message || 'Network error during image upload');
   }
-
-  const data = await response.json();
-  return data.url;
 };

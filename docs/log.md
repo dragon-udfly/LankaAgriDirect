@@ -116,3 +116,7 @@
   - **Buyer Navigation & UI Enhancements:**
     - Replaced generic emoji-based icons in `BuyerNavigator.js` and `HomeScreen.js` with professional vector icons from `@expo/vector-icons` (`Ionicons`).
     - Added a global authentication header button in `BuyerNavigator.js`. Guests now see a "Log In" button to enter the authentication flow without being trapped in the Guest view, and logged-in Admins see a "Log Out" button.
+  - **Account Settings & Audit Log Fixes:**
+    - Fixed the "Could not load profile" bug in `AccountSettingsScreen.js` by replacing an undefined `getMe()` API call with the correct `getMyProfile()` function.
+    - Expanded the UI form and `UpdateProfileRequest.java` DTO to support missing fields: `Province`, `District`, `GN Division`, and `Business Type`.
+    - Integrated `ProducerAuditLogRepository` into `AuthService.java`. The system now automatically generates and persists an immutable `"UPDATE_PROFILE"` audit log entry every time a producer updates their settings.

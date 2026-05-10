@@ -24,17 +24,22 @@ public class ImageUploadController {
      * Returns the secure URL of the uploaded image.
      */
     @PostMapping("/image")
-    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
         }
 
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
-                "folder", "lankaagridirect",
-                "resource_type", "image"
-        ));
+        try {
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+                    "folder", "lankaagridirect",
+                    "resource_type", "image"
+            ));
 
-        String secureUrl = (String) uploadResult.get("secure_url");
-        return ResponseEntity.ok(Map.of("url", secureUrl));
+            String secureUrl = (String) uploadResult.get("secure_url");
+            return ResponseEntity.ok(Map.of("url", secureUrl));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Cloudinary upload failed: " + e.getMessage()));
+        }
     }
 }

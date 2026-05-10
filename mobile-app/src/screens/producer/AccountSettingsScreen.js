@@ -14,6 +14,7 @@ import {
 import {useAuth} from '../../context/AuthContext';
 import {getMyProfile, updateProfile, deleteAccount} from '../../api/authApi';
 import {uploadImage} from '../../api/cloudinaryUpload';
+import Geolocation from '@react-native-community/geolocation';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import AlertBox from '../../components/AlertBox';
@@ -72,6 +73,12 @@ const AccountSettingsScreen = ({navigation}) => {
     homeAddress: '',
     storeAddress: '',
     profilePictureUrl: '',
+    district: '',
+    province: '',
+    gnDivision: '',
+    businessType: '',
+    latitude: null,
+    longitude: null,
   });
 
   const [newPassword, setNewPassword] = useState('');
@@ -91,7 +98,7 @@ const AccountSettingsScreen = ({navigation}) => {
 
   const fetchProfile = async () => {
     try {
-      const res = await getMe();
+      const res = await getMyProfile();
       const d = res.data;
       setFormData({
         firstName: d.firstName || d.name?.split(' ')[0] || '',
@@ -106,6 +113,12 @@ const AccountSettingsScreen = ({navigation}) => {
         homeAddress: d.homeAddress || '',
         storeAddress: d.storeAddress || '',
         profilePictureUrl: d.profilePictureUrl || '',
+        district: d.district || '',
+        province: d.province || '',
+        gnDivision: d.gnDivision || '',
+        businessType: d.businessType || '',
+        latitude: d.latitude || null,
+        longitude: d.longitude || null,
       });
       if (d.profilePictureUrl) setProfilePreview(d.profilePictureUrl);
     } catch (err) {
@@ -117,6 +130,23 @@ const AccountSettingsScreen = ({navigation}) => {
 
   const setField = (field, value) => {
     setFormData(prev => ({...prev, [field]: value}));
+  };
+
+  const getLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        setFormData(prev => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }));
+        alert('Location acquired successfully!');
+      },
+      error => {
+        alert('Error getting location: ' + error.message);
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
   };
 
   const handleChangePhoto = async () => {
@@ -168,6 +198,12 @@ const AccountSettingsScreen = ({navigation}) => {
         homeAddress: formData.homeAddress,
         storeAddress: formData.storeAddress,
         profilePictureUrl: formData.profilePictureUrl,
+        district: formData.district,
+        province: formData.province,
+        gnDivision: formData.gnDivision,
+        businessType: formData.businessType,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       };
 
       if (newPassword) {
@@ -222,11 +258,18 @@ const AccountSettingsScreen = ({navigation}) => {
     );
   }
 
+  const Wrapper = Platform.OS === 'web' ? View : KeyboardAvoidingView;
+  const wrapperProps = Platform.OS === 'web'
+    ? {style: styles.webWrapper}
+    : {style: styles.container, behavior: 'padding'};
+
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <Wrapper {...wrapperProps}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={Platform.OS === 'web' ? {flex: 1} : undefined}>
         {/* Profile Photo */}
         <View style={styles.photoSection}>
           <TouchableOpacity onPress={handleChangePhoto} style={styles.avatarWrapper}>
@@ -287,6 +330,52 @@ const AccountSettingsScreen = ({navigation}) => {
           </View>
           <AppInput label="Home Address" value={formData.homeAddress} onChangeText={v => setField('homeAddress', v)} />
           <AppInput label="Store Address" value={formData.storeAddress} onChangeText={v => setField('storeAddress', v)} />
+          <View style={styles.row}>
+            <View style={styles.halfInput}>
+              <AppInput label="Province" value={formData.province} onChangeText={v => setField('province', v)} />
+            </View>
+            <View style={styles.halfInput}>
+              <AppInput label="District" value={formData.district} onChangeText={v => setField('district', v)} />
+            </View>
+          </View>
+          <View style={styles.row}>
+            <View style={styles.halfInput}>
+              <AppInput label="GN Division" value={formData.gnDivision} onChangeText={v => setField('gnDivision', v)} />
+            </View>
+            <View style={styles.halfInput}>
+              {/* Empty block for spacing if needed */}
+            </View>
+          </View>
+
+          <Text style={styles.label}>Business Type</Text>
+          <View style={styles.radioGroup}>
+            <TouchableOpacity
+              style={[styles.radioBtn, formData.businessType === 'small-scale' && styles.radioBtnActive]}
+              onPress={() => setField('businessType', 'small-scale')}>
+              <Text style={[styles.radioText, formData.businessType === 'small-scale' && styles.radioTextActive]}>
+                Small Scale
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.radioBtn, formData.businessType === 'home-gardener' && styles.radioBtnActive]}
+              onPress={() => setField('businessType', 'home-gardener')}>
+              <Text style={[styles.radioText, formData.businessType === 'home-gardener' && styles.radioTextActive]}>
+                Home Gardener
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.label}>Location</Text>
+          <View style={styles.locationContainer}>
+            <Text style={styles.locationText}>
+              {formData.latitude && formData.longitude
+                ? `Lat: ${formData.latitude.toFixed(4)}, Lng: ${formData.longitude.toFixed(4)}`
+                : 'Location not set'}
+            </Text>
+            <TouchableOpacity style={styles.locationBtn} onPress={getLocation}>
+              <Text style={styles.locationBtnText}>Get Current Location</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Password */}
@@ -318,13 +407,26 @@ const AccountSettingsScreen = ({navigation}) => {
           />
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </Wrapper>
   );
 };
 
 const styles = StyleSheet.create({
   flex: {flex: 1, backgroundColor: COLORS.background},
-  container: {padding: SPACING.lg, paddingBottom: SPACING.xxl},
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  webWrapper: {
+    height: '100vh',
+    backgroundColor: COLORS.background,
+    overflow: 'hidden',
+  },
+  scroll: {
+    flexGrow: 1,
+    padding: SPACING.lg,
+    paddingBottom: 60,
+  },
   centered: {flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.background},
   // Photo section
   photoSection: {alignItems: 'center', marginBottom: SPACING.lg},
@@ -379,6 +481,66 @@ const styles = StyleSheet.create({
   cardSubtitle: {fontSize: 13, color: COLORS.textSecondary, marginBottom: SPACING.md},
   row: {flexDirection: 'row', justifyContent: 'space-between'},
   halfInput: {width: '48%'},
+  label: {
+    ...FONTS.body,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    marginTop: SPACING.sm,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    marginBottom: SPACING.md,
+  },
+  radioBtn: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginRight: SPACING.sm,
+  },
+  radioBtnActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryLight || '#e6f4ea',
+  },
+  radioText: {
+    ...FONTS.body,
+    color: COLORS.textLight,
+  },
+  radioTextActive: {
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: SPACING.sm,
+    backgroundColor: COLORS.surface,
+  },
+  locationText: {
+    ...FONTS.body,
+    color: COLORS.text,
+    flex: 1,
+  },
+  locationBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: 6,
+  },
+  locationBtnText: {
+    color: COLORS.white,
+    ...FONTS.body,
+    fontWeight: '600',
+    fontSize: 12,
+  },
   saveBtn: {marginBottom: SPACING.lg},
   // Danger zone
   dangerCard: {

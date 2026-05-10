@@ -8,8 +8,10 @@ import com.example.lankaagridirect.Exception.DuplicateResourceException;
 import com.example.lankaagridirect.Exception.ResourceNotFoundException;
 import com.example.lankaagridirect.Models.Admin;
 import com.example.lankaagridirect.Models.Producer;
+import com.example.lankaagridirect.Models.ProducerAuditLog;
 import com.example.lankaagridirect.Repositories.AdminRepository;
 import com.example.lankaagridirect.Repositories.ProducerRepository;
+import com.example.lankaagridirect.Repositories.ProducerAuditLogRepository;
 import com.example.lankaagridirect.Security.JwtUtil;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,15 +24,18 @@ public class AuthService {
 
     private final ProducerRepository producerRepository;
     private final AdminRepository adminRepository;
+    private final ProducerAuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public AuthService(ProducerRepository producerRepository,
                        AdminRepository adminRepository,
+                       ProducerAuditLogRepository auditLogRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil) {
         this.producerRepository = producerRepository;
         this.adminRepository = adminRepository;
+        this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -194,11 +199,23 @@ public class AuthService {
         if (req.getLocationDescription() != null) producer.setLocationDescription(req.getLocationDescription());
         if (req.getHomeAddress() != null)       producer.setHomeAddress(req.getHomeAddress());
         if (req.getStoreAddress() != null)      producer.setStoreAddress(req.getStoreAddress());
+        if (req.getDistrict() != null)          producer.setDistrict(req.getDistrict());
+        if (req.getProvince() != null)          producer.setProvince(req.getProvince());
+        if (req.getGnDivision() != null)        producer.setGnDivision(req.getGnDivision());
+        if (req.getBusinessType() != null)      producer.setBusinessType(req.getBusinessType());
         if (req.getProfilePictureUrl() != null) producer.setProfilePictureUrl(req.getProfilePictureUrl());
         if (req.getPassword() != null)          producer.setPassword(passwordEncoder.encode(req.getPassword()));
 
         producer.setModifiedAt(LocalDateTime.now());
         producerRepository.save(producer);
+
+        // Record Audit Log
+        ProducerAuditLog auditLog = new ProducerAuditLog();
+        auditLog.setProducerId(producer.getId());
+        auditLog.setAction("UPDATE_PROFILE");
+        auditLog.setDescription("Producer updated their profile settings");
+        auditLog.setPerformedAt(LocalDateTime.now());
+        auditLogRepository.save(auditLog);
     }
 
     // ─── Soft Delete Account ──────────────────────────────────────────────────
