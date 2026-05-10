@@ -82,7 +82,9 @@
   - Updated `SecurityConfig.java` to define an explicit empty `UserDetailsService`, suppressing Spring Security's automatic password generation and cleaning up startup logs.
   - **Default Admin Credentials:** username `admin` / password `admin123` (BCrypt hashed in DB).
 
-
-
-
+## 2026-05-10
+- **Codebase Scan & Bug Fixes:**
+  - **RegisterScreen.js (Scrolling Fix):** Fixed the Create Account screen not being scrollable on web browsers. Replaced `KeyboardAvoidingView` with a platform-aware `Wrapper` that uses a `View` with `height: '100vh'` on web (bounding the container height), while preserving `KeyboardAvoidingView` behavior on iOS/Android. Added `flex: 1` to the `ScrollView` style on web and increased bottom padding to 60px to ensure all form fields are reachable.
+  - **LoginScreen.js (Shadow Deprecation Fix):** Replaced deprecated inline `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius` style props in the card style with the platform-aware `SHADOW.md` utility from `theme/colors.js`, which uses `boxShadow` on web and native shadow props on mobile. This eliminates the `"shadow*" style props are deprecated` browser console warning.
+  - Added `SHADOW` to the imports in `LoginScreen.js`.
 

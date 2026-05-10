@@ -13,7 +13,7 @@ import {login} from '../../api/authApi';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import AlertBox from '../../components/AlertBox';
-import {COLORS, FONTS, SPACING, RADIUS} from '../../theme/colors';
+import {COLORS, FONTS, SPACING, RADIUS, SHADOW} from '../../theme/colors';
 
 const LoginScreen = ({navigation}) => {
   const {signIn} = useAuth();
@@ -127,11 +127,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    ...SHADOW.md,
   },
   title: {
     fontSize: 22,

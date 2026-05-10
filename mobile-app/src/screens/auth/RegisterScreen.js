@@ -89,14 +89,20 @@ const RegisterScreen = ({navigation}) => {
     setFormData(prev => ({...prev, [field]: value}));
   };
 
+  // On web, KeyboardAvoidingView + flex:1 doesn't bound height,
+  // so wrap in a View with explicit height to enable scrolling.
+  const Wrapper = Platform.OS === 'web' ? View : KeyboardAvoidingView;
+  const wrapperProps = Platform.OS === 'web'
+    ? {style: styles.webWrapper}
+    : {style: styles.container, behavior: 'padding'};
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <Wrapper {...wrapperProps}>
       <ScrollView 
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        style={Platform.OS === 'web' ? {flex: 1} : undefined}>
         <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join Lanka Agri-Direct as a Producer</Text>
 
@@ -300,7 +306,7 @@ const RegisterScreen = ({navigation}) => {
             </View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </Wrapper>
   );
 };
 
@@ -309,10 +315,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  webWrapper: {
+    height: '100vh',
+    backgroundColor: COLORS.background,
+    overflow: 'hidden',
+  },
   scroll: {
     flexGrow: 1,
     padding: SPACING.xl,
-    paddingBottom: 40,
+    paddingBottom: 60,
   },
   title: {
     ...FONTS.h1,
