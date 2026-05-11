@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,  "/api/v1/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/analytics/call").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/analytics/address").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/upload/**").permitAll()
 
                 // --- Admin-only Endpoints ---
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

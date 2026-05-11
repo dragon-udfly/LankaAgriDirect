@@ -29,11 +29,26 @@ public class ProductService {
         this.producerRepository = producerRepository;
     }
 
-    public Page<ProductResponse> getAllProducts(String category, int page, int limit) {
+    public Page<ProductResponse> getAllProducts(String category, String search, int page, int limit) {
         Pageable pageable = PageRequest.of(page - 1, limit);
-        Page<Product> products = (category != null && !category.isBlank())
-                ? productRepository.findByCategoryAndIsSoldOutFalseAndProductStatusAndIsDeletedFalse(category, "active", pageable)
-                : productRepository.findByIsSoldOutFalseAndProductStatusAndIsDeletedFalse("active", pageable);
+        Page<Product> products;
+
+        boolean hasCategory = (category != null && !category.isBlank());
+        boolean hasSearch = (search != null && !search.isBlank());
+
+        if (hasSearch) {
+            if (hasCategory) {
+                products = productRepository.searchProductsByCategory(search, category, pageable);
+            } else {
+                products = productRepository.searchProducts(search, pageable);
+            }
+        } else {
+            if (hasCategory) {
+                products = productRepository.findByCategoryAndIsSoldOutFalseAndProductStatusAndIsDeletedFalse(category, "active", pageable);
+            } else {
+                products = productRepository.findByIsSoldOutFalseAndProductStatusAndIsDeletedFalse("active", pageable);
+            }
+        }
         return products.map(this::toProductResponse);
     }
 

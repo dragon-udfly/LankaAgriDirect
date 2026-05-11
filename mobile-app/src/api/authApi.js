@@ -10,6 +10,8 @@ export const login = data => axiosInstance.post('/auth/login', data);
 
 export const getMe = () => axiosInstance.get('/auth/me');
 
+export const getMyProfile = () => axiosInstance.get('/auth/me/profile');
+
 export const updateProfile = data => axiosInstance.put('/auth/profile', data);
 
 export const deleteAccount = () => axiosInstance.delete('/auth/profile');

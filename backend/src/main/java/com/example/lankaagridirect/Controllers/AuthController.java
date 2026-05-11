@@ -48,6 +48,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.getCurrentUser(userId, role));
     }
 
+    @GetMapping("/me/profile")
+    public ResponseEntity<?> getMyProfile(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(authService.getMyProfile(userId));
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse> updateProfile(Authentication auth,
                                                       @Valid @RequestBody UpdateProfileRequest req) {
