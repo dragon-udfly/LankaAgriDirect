@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import {getAllProducts} from '../../api/productApi';
+import {Ionicons} from '@expo/vector-icons';
 import ProductCard from '../../components/ProductCard';
 import AlertBox from '../../components/AlertBox';
 import {COLORS, FONTS, SPACING, RADIUS} from '../../theme/colors';
@@ -62,10 +63,14 @@ const HomeScreen = ({navigation}) => {
   );
 
   useEffect(() => {
-    setLoading(true);
-    setPage(1);
-    fetchProducts(true);
-  }, [selectedCategory]);
+    const delayDebounceFn = setTimeout(() => {
+      setLoading(true);
+      setPage(1);
+      fetchProducts(true);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [selectedCategory, searchQuery]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -80,16 +85,23 @@ const HomeScreen = ({navigation}) => {
     <View style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchBar}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Ionicons name="search" size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[
+            styles.searchInput,
+            Platform.OS === 'web' && {outlineStyle: 'none'}
+          ]}
           placeholder="Search fresh produce..."
           placeholderTextColor={COLORS.textLight}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          onSubmitEditing={() => fetchProducts(true)}
           returnKeyType="search"
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={18} color={COLORS.textLight} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Category Chips */}
@@ -163,7 +175,7 @@ const HomeScreen = ({navigation}) => {
           ListEmptyComponent={
             !loading && (
               <View style={styles.centered}>
-                <Text style={styles.emptyIcon}>🌾</Text>
+                <Ionicons name="leaf-outline" size={48} color={COLORS.textSecondary} style={styles.emptyIcon} />
                 <Text style={styles.emptyTitle}>No products found</Text>
                 <Text style={styles.emptySubtitle}>
                   Try a different category or search term
@@ -178,7 +190,11 @@ const HomeScreen = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: COLORS.background},
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    height: Platform.OS === 'web' ? '100vh' : '100%',
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -190,7 +206,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     height: 48,
   },
-  searchIcon: {fontSize: 16, marginRight: SPACING.sm},
+  searchIcon: {marginRight: SPACING.sm},
   searchInput: {
     flex: 1,
     fontSize: 15,
@@ -220,7 +236,7 @@ const styles = StyleSheet.create({
   list: {padding: SPACING.md, paddingTop: SPACING.sm},
   centered: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl},
   loadingText: {marginTop: SPACING.md, color: COLORS.textSecondary},
-  emptyIcon: {fontSize: 48, marginBottom: SPACING.md},
+  emptyIcon: {marginBottom: SPACING.md},
   emptyTitle: {fontSize: 18, ...FONTS.semiBold, color: COLORS.text},
   emptySubtitle: {fontSize: 14, color: COLORS.textSecondary, marginTop: SPACING.xs},
   errorWrapper: {paddingHorizontal: SPACING.md},

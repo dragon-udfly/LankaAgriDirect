@@ -11,4 +11,5 @@ public class AuthResponse {
     private String name;
     private String role;
     private String verificationStatus; // null for admins
+    private String profilePictureUrl;  // null for admins
 }

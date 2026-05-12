@@ -94,6 +94,34 @@
     - Improved Axios error handling in `adminApi.ts` to display a clear "Network Error: Cannot connect to the server" message when the backend is unreachable, instead of a vague "unexpected error".
   - **Full System Audit & Critical Infrastructure Fixes:**
     - **[CRITICAL] `docker-compose.yml` — MongoDB URI env var renamed:** Changed env var from `MONGO_URI` to `SPRING_DATA_MONGODB_URI`. Spring Boot 4 relaxed binding natively maps `SPRING_DATA_MONGODB_URI` → `spring.data.mongodb.uri`, guaranteeing the Docker service hostname `mongodb` is used instead of falling back to `localhost:27017`. This is the root cause of all backend failures.
+    - **[ULTIMATE FIX] `backend/Dockerfile` — MongoDB URI CLI Injection:** Added `--spring.data.mongodb.uri=mongodb://mongodb:27017/lankaagridirect_db` directly to the `ENTRYPOINT` command in the `Dockerfile`. This forcefully bypasses Docker Compose's environment injection and Spring Boot's property file loading mechanism, guaranteeing that the `mongodb:27017` connection string is used, completely overriding the stubborn `localhost:27017` fallback on Windows/WSL environments.
+    - **[CRITICAL] `backend/.../DataInitializer.java` — Admin Password Sync:** Modified the DataInitializer to fetch the `admin` document on startup and explicitly synchronize its password to `admin123` via Spring's `PasswordEncoder`. This fixes authentication failures (`AUTH_001`) caused by the raw `init-mongo.js` script inserting an incorrect/unverifiable BCrypt hash.
     - **[CRITICAL] `docker-compose.yml` — MongoDB healthcheck added:** Added a `healthcheck` to the `mongodb` service using `mongosh --eval db.adminCommand('ping')` and changed the `backend` `depends_on` to use `condition: service_healthy`. This prevents the backend and DataInitializer from running before MongoDB is ready to accept connections (race condition).
     - **[HIGH] `backend/pom.xml` — DevTools excluded from production JAR:** Added `<excludeDevtools>true</excludeDevtools>` to the Spring Boot Maven plugin configuration. This ensures `spring-boot-devtools` is stripped from the packaged JAR before deployment to Docker, eliminating any potential interference with property loading.
   - **API Documentation:** Created a comprehensive `API Documentation.md` file in the `docs` folder detailing all endpoints, authentication, request payloads, and response structures for the Spring Boot backend.
+  - **Installation Guide:** Created a comprehensive `Installation & Setup Guide.md` file in the `docs` folder providing clear, step-by-step instructions on cloning the repository, setting up environment variables, running the Docker containers, and starting the mobile application.
+  - **Producer Registration Workflow Finalized:**
+    - Integrated Cloudinary for secure, cloud-based image storage. Updated `application.properties` and added `CloudinaryConfig.java` to support uploads using environment variables.
+    - Created an open `POST /api/v1/upload/image` endpoint in `ImageUploadController.java` returning a secure Cloudinary URL upon successful multipart file upload.
+    - Built a cross-platform helper `cloudinaryUpload.js` to manage direct image uploads from the React Native app.
+    - Overhauled `RegisterScreen.js` UI and logic to capture a profile picture and front/rear NIC photos. After successful registration, it redirects the user directly to the Login screen.
+  - **Producer Dashboard & Settings:**
+    - Refactored `AuthResponse` and `AuthService` to include the `profilePictureUrl` upon authentication.
+    - Updated the global `AuthContext` to support a `refreshUser()` function for seamlessly syncing profile changes without requiring re-authentication.
+    - Enhanced `DashboardScreen.js` to fetch and render the user's profile picture alongside analytical statistics, and correctly linked the "Account Settings" action button.
+    - Created a brand-new `AccountSettingsScreen.js` to allow producers to edit all personal and business profile fields, change passwords, change profile picture, and initiate account deletion.
+    - Added `ProducerProfileResponse.java` and `GET /api/v1/auth/me/profile` endpoint to securely transmit all editable fields back to the producer.
+  - **Product Management:**
+    - Updated `AddProductScreen.js` to natively capture product images via the Cloudinary API when creating or modifying a marketplace listing.
+  - **Buyer Navigation & UI Enhancements:**
+    - Replaced generic emoji-based icons in `BuyerNavigator.js` and `HomeScreen.js` with professional vector icons from `@expo/vector-icons` (`Ionicons`).
+    - Added a global authentication header button in `BuyerNavigator.js`. Guests now see a "Log In" button to enter the authentication flow without being trapped in the Guest view, and logged-in Admins see a "Log Out" button.
+  - **Account Settings & Audit Log Fixes:**
+    - Fixed the "Could not load profile" bug in `AccountSettingsScreen.js` by replacing an undefined `getMe()` API call with the correct `getMyProfile()` function.
+    - Expanded the UI form and `UpdateProfileRequest.java` DTO to support missing fields: `Province`, `District`, `GN Division`, and `Business Type`.
+    - Integrated `ProducerAuditLogRepository` into `AuthService.java`. The system now automatically generates and persists an immutable `"UPDATE_PROFILE"` audit log entry every time a producer updates their settings.
+  - **Platform & Stability Fixes:**
+    - Resolved widespread scrolling issues on Expo Web by implementing a custom `Wrapper` and bounded `ScrollView` height pattern across `RegisterScreen.js`, `AccountSettingsScreen.js`, and `AddProductScreen.js`.
+    - Increased Spring Boot multipart file size limit to **10MB** to support high-resolution image uploads.
+    - Added comprehensive try-catch logging to `ImageUploadController.java` to provide detailed error feedback for Cloudinary failures.
+    - Fixed `AppInput.js` to disable default browser focus outlines, resolving the "thick black border" visual bug on web.
