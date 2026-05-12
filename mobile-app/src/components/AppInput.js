@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, TextInput, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {View, TextInput, Text, StyleSheet, TouchableOpacity, Platform} from 'react-native';
 import {COLORS, FONTS, SPACING, RADIUS} from '../theme/colors';
 
 /**
@@ -35,7 +35,11 @@ const AppInput = ({
           autoCapitalize={autoCapitalize}
           multiline={multiline}
           numberOfLines={numberOfLines}
-          style={[styles.input, multiline && styles.multiline]}
+          style={[
+            styles.input,
+            multiline && styles.multiline,
+            Platform.OS === 'web' && {outlineStyle: 'none'}
+          ]}
           {...rest}
         />
         {secureTextEntry && (

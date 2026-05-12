@@ -29,9 +29,10 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<Page<ProductResponse>> getAllProducts(
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit) {
-        return ResponseEntity.ok(productService.getAllProducts(category, page, limit));
+        return ResponseEntity.ok(productService.getAllProducts(category, search, page, limit));
     }
 
     @GetMapping("/{id}")

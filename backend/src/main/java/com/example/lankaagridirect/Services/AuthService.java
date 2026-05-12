@@ -8,8 +8,10 @@ import com.example.lankaagridirect.Exception.DuplicateResourceException;
 import com.example.lankaagridirect.Exception.ResourceNotFoundException;
 import com.example.lankaagridirect.Models.Admin;
 import com.example.lankaagridirect.Models.Producer;
+import com.example.lankaagridirect.Models.ProducerAuditLog;
 import com.example.lankaagridirect.Repositories.AdminRepository;
 import com.example.lankaagridirect.Repositories.ProducerRepository;
+import com.example.lankaagridirect.Repositories.ProducerAuditLogRepository;
 import com.example.lankaagridirect.Security.JwtUtil;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,15 +24,18 @@ public class AuthService {
 
     private final ProducerRepository producerRepository;
     private final AdminRepository adminRepository;
+    private final ProducerAuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public AuthService(ProducerRepository producerRepository,
                        AdminRepository adminRepository,
+                       ProducerAuditLogRepository auditLogRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil) {
         this.producerRepository = producerRepository;
         this.adminRepository = adminRepository;
+        this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -103,7 +108,7 @@ public class AuthService {
                 throw new BadCredentialsException("Invalid credentials");
             }
             String token = jwtUtil.generateToken(admin.getId(), "ADMIN");
-            return new AuthResponse(token, admin.getId(), admin.getName(), "ADMIN", null);
+            return new AuthResponse(token, admin.getId(), admin.getName(), "ADMIN", null, null);
         }
 
         // Try producer — loginId can be NIC, email, or business phone
@@ -124,7 +129,7 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(producer.getId(), "PRODUCER");
         String name = producer.getFirstName() + " " + producer.getLastName();
-        return new AuthResponse(token, producer.getId(), name, "PRODUCER", producer.getVerificationStatus());
+        return new AuthResponse(token, producer.getId(), name, "PRODUCER", producer.getVerificationStatus(), producer.getProfilePictureUrl());
     }
 
     // ─── Get Current User ─────────────────────────────────────────────────────
@@ -133,12 +138,46 @@ public class AuthService {
             Producer p = producerRepository.findById(userId)
                     .orElseThrow(() -> new ResourceNotFoundException("Producer not found"));
             return new AuthResponse(null, p.getId(),
-                    p.getFirstName() + " " + p.getLastName(), "PRODUCER", p.getVerificationStatus());
+                    p.getFirstName() + " " + p.getLastName(), "PRODUCER", p.getVerificationStatus(), p.getProfilePictureUrl());
         } else {
             Admin a = adminRepository.findById(userId)
                     .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
-            return new AuthResponse(null, a.getId(), a.getName(), "ADMIN", null);
+            return new AuthResponse(null, a.getId(), a.getName(), "ADMIN", null, null);
         }
+    }
+
+    // ─── Get My Full Profile (for Account Settings) ────────────────────────────
+    public com.example.lankaagridirect.DTOs.response.ProducerProfileResponse getMyProfile(String producerId) {
+        Producer producer = producerRepository.findById(producerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producer not found"));
+
+        var resp = new com.example.lankaagridirect.DTOs.response.ProducerProfileResponse();
+        resp.setId(producer.getId());
+        resp.setFirstName(producer.getFirstName());
+        resp.setLastName(producer.getLastName());
+        resp.setNic(producer.getNic());
+        resp.setNicPhotoUrl(producer.getNicPhotoUrl());
+        resp.setProfilePictureUrl(producer.getProfilePictureUrl());
+        resp.setBusinessPhone(producer.getBusinessPhone());
+        resp.setMobilePhone(producer.getMobilePhone());
+        resp.setEmail(producer.getEmail());
+        resp.setStoreTitle(producer.getStoreTitle());
+        resp.setOperatingDays(producer.getOperatingDays());
+        resp.setStartTime(producer.getStartTime());
+        resp.setEndTime(producer.getEndTime());
+        resp.setLatitude(producer.getLatitude());
+        resp.setLongitude(producer.getLongitude());
+        resp.setLocationDescription(producer.getLocationDescription());
+        resp.setHomeAddress(producer.getHomeAddress());
+        resp.setStoreAddress(producer.getStoreAddress());
+        resp.setDistrict(producer.getDistrict());
+        resp.setProvince(producer.getProvince());
+        resp.setGnDivision(producer.getGnDivision());
+        resp.setBusinessType(producer.getBusinessType());
+        resp.setVerificationStatus(producer.getVerificationStatus());
+        resp.setRole("PRODUCER");
+        resp.setName(producer.getFirstName() + " " + producer.getLastName());
+        return resp;
     }
 
     // ─── Update Profile ───────────────────────────────────────────────────────
@@ -160,11 +199,23 @@ public class AuthService {
         if (req.getLocationDescription() != null) producer.setLocationDescription(req.getLocationDescription());
         if (req.getHomeAddress() != null)       producer.setHomeAddress(req.getHomeAddress());
         if (req.getStoreAddress() != null)      producer.setStoreAddress(req.getStoreAddress());
+        if (req.getDistrict() != null)          producer.setDistrict(req.getDistrict());
+        if (req.getProvince() != null)          producer.setProvince(req.getProvince());
+        if (req.getGnDivision() != null)        producer.setGnDivision(req.getGnDivision());
+        if (req.getBusinessType() != null)      producer.setBusinessType(req.getBusinessType());
         if (req.getProfilePictureUrl() != null) producer.setProfilePictureUrl(req.getProfilePictureUrl());
         if (req.getPassword() != null)          producer.setPassword(passwordEncoder.encode(req.getPassword()));
 
         producer.setModifiedAt(LocalDateTime.now());
         producerRepository.save(producer);
+
+        // Record Audit Log
+        ProducerAuditLog auditLog = new ProducerAuditLog();
+        auditLog.setProducerId(producer.getId());
+        auditLog.setAction("UPDATE_PROFILE");
+        auditLog.setDescription("Producer updated their profile settings");
+        auditLog.setPerformedAt(LocalDateTime.now());
+        auditLogRepository.save(auditLog);
     }
 
     // ─── Soft Delete Account ──────────────────────────────────────────────────
