@@ -3,29 +3,46 @@ services:
   mongodb:
     image: mongo:latest
     container_name: lanka-mongo
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      # Seed script: runs once on first-time DB creation
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # Spring Boot Backend
   backend:
     build: ./backend
     container_name: lanka-backend
+    restart: on-failure
     ports:
       - "8080:8080"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
-      # We use the service name 'mongodb' as the hostname
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/lanka_db
-      # Use your env variable from earlier
-      - SYSTEM_NAME=Lanka Agri Direct
+      # Database — must use Docker service name 'mongodb', not 'localhost'
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/lankaagridirect_db
+      # Inject Secrets from .env
+      - JWT_SECRET=${JWT_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    env_file:
+      - .env
 
   # Admin Web Dashboard
   admin-web:
     build: ./admin-web
     container_name: lanka-admin-web
+    restart: on-failure
     ports:
       - "5173:80"
     depends_on:

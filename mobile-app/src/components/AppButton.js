@@ -28,7 +28,9 @@ const AppButton = ({
     switch (variant) {
       case 'secondary': return COLORS.surfaceAlt;
       case 'danger':    return COLORS.error;
-      case 'outline':   return 'transparent';
+      case 'outline':   
+      case 'accent-outline':
+        return 'transparent';
       default:          return COLORS.primary;
     }
   };
@@ -38,6 +40,7 @@ const AppButton = ({
     switch (variant) {
       case 'secondary': return COLORS.primary;
       case 'outline':   return COLORS.primary;
+      case 'accent-outline': return COLORS.accent;
       default:          return COLORS.white;
     }
   };
@@ -52,6 +55,7 @@ const AppButton = ({
         fullWidth && styles.fullWidth,
         {backgroundColor: getBackground()},
         variant === 'outline' && styles.outline,
+        variant === 'accent-outline' && styles.accentOutline,
         style,
       ]}>
       {loading ? (
@@ -76,6 +80,10 @@ const styles = StyleSheet.create({
   outline: {
     borderWidth: 1.5,
     borderColor: COLORS.primary,
+  },
+  accentOutline: {
+    borderWidth: 1.5,
+    borderColor: COLORS.accent,
   },
   text: {
     fontSize: 16,

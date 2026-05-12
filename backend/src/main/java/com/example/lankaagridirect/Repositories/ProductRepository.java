@@ -43,4 +43,13 @@ public interface ProductRepository extends MongoRepository<Product, String> {
 
     Page<Product> findByCategoryAndIsSoldOutFalseAndProductStatusAndIsDeletedFalse(
             String category, String productStatus, Pageable pageable);
+
+    // Search by name or description
+    @org.springframework.data.mongodb.repository.Query("{ 'isDeleted': false, 'isSoldOut': false, 'productStatus': 'active', " +
+            "  $or: [ { 'name': { $regex: ?0, $options: 'i' } }, { 'description': { $regex: ?0, $options: 'i' } } ] }")
+    Page<Product> searchProducts(String query, org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.mongodb.repository.Query("{ 'isDeleted': false, 'isSoldOut': false, 'productStatus': 'active', 'category': ?1, " +
+            "  $or: [ { 'name': { $regex: ?0, $options: 'i' } }, { 'description': { $regex: ?0, $options: 'i' } } ] }")
+    Page<Product> searchProductsByCategory(String query, String category, org.springframework.data.domain.Pageable pageable);
 }
