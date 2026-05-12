@@ -1,22 +1,23 @@
-package com.example.lankaagridirect.DTOs.request;
+package com.example.lankaagridirect.DTOs.response;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
 
 /**
- * Partial update request for producer profile.
- * All fields are optional — only non-null fields will be applied.
+ * Full profile response for the authenticated producer.
+ * Used by the Account Settings screen.
  */
 @Data
-public class UpdateProfileRequest {
+public class ProducerProfileResponse {
+    private String id;
     private String firstName;
     private String lastName;
+    private String nic;
+    private String nicPhotoUrl;
+    private String profilePictureUrl;
     private String businessPhone;
     private String mobilePhone;
-    @Email(message = "Invalid email format")
     private String email;
     private String storeTitle;
     private List<String> operatingDays;
@@ -27,12 +28,11 @@ public class UpdateProfileRequest {
     private String locationDescription;
     private String homeAddress;
     private String storeAddress;
-    private String profilePictureUrl;
-    @Size(min = 8, message = "Password must be at least 8 characters")
-    private String password;
-    
     private String district;
     private String province;
     private String gnDivision;
     private String businessType;
+    private String verificationStatus;
+    private String role;
+    private String name; // convenience: firstName + lastName
 }

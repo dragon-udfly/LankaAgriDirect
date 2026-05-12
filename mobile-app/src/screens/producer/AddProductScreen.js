@@ -10,10 +10,48 @@ import {
 } from 'react-native';
 import {useAuth} from '../../context/AuthContext';
 import {createProduct, updateProduct} from '../../api/productApi';
+import {uploadImage} from '../../api/cloudinaryUpload';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import AlertBox from '../../components/AlertBox';
 import {COLORS, FONTS, SPACING, RADIUS} from '../../theme/colors';
+import {TouchableOpacity, Image, ActivityIndicator} from 'react-native';
+
+const pickImageWeb = () => {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        resolve({file, previewUri: URL.createObjectURL(file)});
+      } else {
+        reject(new Error('No file selected'));
+      }
+    };
+    input.click();
+  });
+};
+
+const pickImageNative = async () => {
+  const {launchImageLibrary} = require('react-native-image-picker');
+  return new Promise((resolve, reject) => {
+    launchImageLibrary({mediaType: 'photo', quality: 0.8}, response => {
+      if (response.didCancel) reject(new Error('Cancelled'));
+      else if (response.errorCode) reject(new Error(response.errorMessage));
+      else {
+        const asset = response.assets[0];
+        resolve({
+          file: {uri: asset.uri, type: asset.type, fileName: asset.fileName},
+          previewUri: asset.uri,
+        });
+      }
+    });
+  });
+};
+
+const pickImage = Platform.OS === 'web' ? pickImageWeb : pickImageNative;
 
 const CATEGORIES = ['Vegetables', 'Fruits', 'Herbal Products', 'Rice', 'Fish', 'Meat'];
 const UNIT_TYPES = ['kg', 'g', 'bundle', 'piece', 'litre', 'dozen'];
@@ -28,6 +66,13 @@ const AddProductScreen = ({navigation, route}) => {
   const [description, setDescription] = useState(editProduct?.description ?? '');
   const [unitPrice, setUnitPrice] = useState(editProduct?.unitPrice?.toString() ?? '');
   const [unitType, setUnitType] = useState(editProduct?.unitType ?? UNIT_TYPES[0]);
+  
+  // Image state
+  const initialImageUrl = editProduct?.imageUrls && editProduct.imageUrls.length > 0 ? editProduct.imageUrls[0] : null;
+  const [imagePreview, setImagePreview] = useState(initialImageUrl);
+  const [imageUrl, setImageUrl] = useState(initialImageUrl);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -59,6 +104,7 @@ const AddProductScreen = ({navigation, route}) => {
         description: description.trim(),
         unitPrice: parseFloat(unitPrice),
         unitType,
+        imageUrls: imageUrl ? [imageUrl] : [],
       };
       if (isEdit) {
         await updateProduct(editProduct.id, payload);
@@ -95,13 +141,56 @@ const AddProductScreen = ({navigation, route}) => {
     </View>
   );
 
+  const handlePickImage = async () => {
+    try {
+      setUploadingImage(true);
+      const result = await pickImage();
+      setImagePreview(result.previewUri);
+      const url = await uploadImage(Platform.OS === 'web' ? result.file : result.file);
+      setImageUrl(url);
+    } catch (err) {
+      if (err.message !== 'Cancelled' && err.message !== 'No file selected') {
+        alert('Failed to upload image: ' + err.message);
+      }
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const Wrapper = Platform.OS === 'web' ? View : KeyboardAvoidingView;
+  const wrapperProps = Platform.OS === 'web'
+    ? {style: styles.webWrapper}
+    : {style: styles.container, behavior: 'padding'};
+
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <Wrapper {...wrapperProps}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={Platform.OS === 'web' ? {flex: 1} : undefined}>
         <AlertBox message={error} type="error" />
         <AlertBox message={success} type="success" />
+
+        {/* Product Image */}
+        <View style={styles.imageSection}>
+          <TouchableOpacity onPress={handlePickImage} style={styles.imageBox}>
+            {imagePreview ? (
+              <Image source={{uri: imagePreview}} style={styles.productImage} />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Text style={styles.imageIcon}>📸</Text>
+                <Text style={styles.imageLabel}>Add Product Image</Text>
+              </View>
+            )}
+            {uploadingImage && (
+              <View style={styles.uploadOverlay}>
+                <ActivityIndicator color={COLORS.white} />
+                <Text style={styles.uploadOverlayText}>Uploading...</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <AppInput
           label="Product Name *"
@@ -161,13 +250,26 @@ const AddProductScreen = ({navigation, route}) => {
           style={styles.submitBtn}
         />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </Wrapper>
   );
 };
 
 const styles = StyleSheet.create({
   flex: {flex: 1, backgroundColor: COLORS.background},
-  container: {padding: SPACING.lg, paddingBottom: SPACING.xxl},
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  webWrapper: {
+    height: '100vh',
+    backgroundColor: COLORS.background,
+    overflow: 'hidden',
+  },
+  scroll: {
+    flexGrow: 1,
+    padding: SPACING.lg,
+    paddingBottom: 60,
+  },
   pillSection: {marginBottom: SPACING.md},
   pillLabel: {fontSize: 14, ...FONTS.medium, color: COLORS.text, marginBottom: SPACING.sm},
   pillRow: {flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm},
@@ -177,6 +279,28 @@ const styles = StyleSheet.create({
   unitSection: {marginBottom: SPACING.md},
   unitPill: {paddingVertical: SPACING.xs, paddingHorizontal: SPACING.sm, minHeight: 36},
   submitBtn: {marginTop: SPACING.lg},
+  imageSection: {marginBottom: SPACING.lg},
+  imageBox: {
+    width: '100%',
+    height: 200,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    backgroundColor: COLORS.surface,
+  },
+  productImage: {width: '100%', height: '100%'},
+  imagePlaceholder: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+  imageIcon: {fontSize: 40, marginBottom: SPACING.xs},
+  imageLabel: {fontSize: 14, ...FONTS.medium, color: COLORS.textSecondary},
+  uploadOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadOverlayText: {color: COLORS.white, marginTop: SPACING.sm, ...FONTS.medium},
 });
 
 export default AddProductScreen;

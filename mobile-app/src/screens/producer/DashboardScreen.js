@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  Image,
 } from 'react-native';
 import {useAuth} from '../../context/AuthContext';
 import {getMyAnalytics} from '../../api/analyticsApi';
@@ -15,7 +16,7 @@ import AlertBox from '../../components/AlertBox';
 import {COLORS, FONTS, SPACING, RADIUS, SHADOW} from '../../theme/colors';
 
 const DashboardScreen = ({navigation}) => {
-  const {user, signOut} = useAuth();
+  const {user, signOut, refreshUser} = useAuth();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,6 +37,7 @@ const DashboardScreen = ({navigation}) => {
 
   useEffect(() => {
     fetchAnalytics();
+    refreshUser(); // Sync profile picture on mount
   }, []);
 
   const StatCard = ({label, value, icon}) => (
@@ -52,15 +54,28 @@ const DashboardScreen = ({navigation}) => {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={() => {setRefreshing(true); fetchAnalytics();}}
+          onRefresh={() => {setRefreshing(true); fetchAnalytics(); refreshUser();}}
           colors={[COLORS.primary]}
         />
       }>
-      {/* Header */}
+      {/* Header with Profile Picture */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Welcome back 👋</Text>
-          <Text style={styles.name}>{user?.name}</Text>
+        <View style={styles.headerLeft}>
+          <View style={styles.avatarWrapper}>
+            {user?.profilePictureUrl ? (
+              <Image source={{uri: user.profilePictureUrl}} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarInitial}>
+                  {user?.name?.charAt(0)?.toUpperCase() || '?'}
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.headerInfo}>
+            <Text style={styles.greeting}>Welcome back 👋</Text>
+            <Text style={styles.name}>{user?.name}</Text>
+          </View>
         </View>
         <TouchableOpacity onPress={signOut} style={styles.logoutBtn}>
           <Text style={styles.logoutText}>Sign Out</Text>
@@ -104,7 +119,7 @@ const DashboardScreen = ({navigation}) => {
         {[
           {label: 'My Products', icon: '📦', screen: 'MyProducts'},
           {label: 'Add Product', icon: '➕', screen: 'AddProduct'},
-          {label: 'My Profile', icon: '👤', screen: 'Profile'},
+          {label: 'Account\nSettings', icon: '⚙️', screen: 'AccountSettings'},
         ].map(action => (
           <TouchableOpacity
             key={action.screen}
@@ -129,6 +144,39 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     paddingTop: SPACING.xl,
     backgroundColor: COLORS.primary,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  avatarWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
+    marginRight: SPACING.sm,
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitial: {
+    fontSize: 20,
+    color: COLORS.white,
+    ...FONTS.bold,
+  },
+  headerInfo: {
+    flex: 1,
   },
   greeting: {fontSize: 13, color: 'rgba(255,255,255,0.8)'},
   name: {fontSize: 20, ...FONTS.bold, color: COLORS.white},
