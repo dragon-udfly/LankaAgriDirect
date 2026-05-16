@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-05-16
+- Updated `AppNavigator.js` to set `BuyerTabs` as the initial unauthenticated route, making the product browsing interface the true first home screen.
+- Updated `BuyerNavigator.js` to include a 'Register' navigation button alongside the existing 'Log In' button in the top header, ensuring unauthenticated users can access both authentication flows directly from the home screen.
 - Fixed `Uncaught ReferenceError: Platform is not defined` crash on the Expo web build by adding the missing `Platform` import from `react-native` inside `HomeScreen.js`.
 - Created a detailed `Installation Guide.md` providing step-by-step instructions for Docker setup, environment variables configuration, and mobile app execution, specifically detailing mobile app web browser compatibility.
 
