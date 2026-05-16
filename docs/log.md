@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-05-16
+- Created a detailed `Installation Guide.md` providing step-by-step instructions for Docker setup, environment variables configuration, and mobile app execution, specifically detailing mobile app web browser compatibility.
+
 ## 2026-05-07
 - Initialized React Native project (`LankaAgriDirectApp`) inside the `mobile-app` directory using React Native CLI (`npx @react-native-community/cli init`).
 - Installed `axios` in the `mobile-app` directory.
