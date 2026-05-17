@@ -8,12 +8,13 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {useAuth} from '../../context/AuthContext';
 import {login} from '../../api/authApi';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import AlertBox from '../../components/AlertBox';
-import {COLORS, FONTS, SPACING, RADIUS} from '../../theme/colors';
+import {COLORS, FONTS, SPACING, RADIUS, SHADOW} from '../../theme/colors';
 
 const LoginScreen = ({navigation}) => {
   const {signIn} = useAuth();
@@ -46,6 +47,11 @@ const LoginScreen = ({navigation}) => {
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled">
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('BuyerTabs')}>
+          <Ionicons name="arrow-back" size={28} color={COLORS.textSecondary} />
+        </TouchableOpacity>
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>🌿</Text>
@@ -90,14 +96,6 @@ const LoginScreen = ({navigation}) => {
               <Text style={styles.registerBold}>Create an account</Text>
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.guestLink}
-            onPress={() => navigation.navigate('BuyerTabs')}>
-            <Text style={styles.guestText}>
-              Browse as Guest (Buyer) →
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -128,11 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    ...SHADOW.md,
   },
   title: {
     fontSize: 22,
@@ -148,8 +142,11 @@ const styles = StyleSheet.create({
   registerLink: {marginTop: SPACING.md, alignItems: 'center'},
   registerText: {fontSize: 14, color: COLORS.textSecondary},
   registerBold: {color: COLORS.primary, ...FONTS.semiBold},
-  guestLink: {marginTop: SPACING.sm, alignItems: 'center'},
-  guestText: {fontSize: 14, color: COLORS.accent, ...FONTS.medium},
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: SPACING.sm,
+    padding: SPACING.xs,
+  },
 });
 
 export default LoginScreen;

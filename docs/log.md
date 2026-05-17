@@ -46,5 +46,82 @@
 - **Project Configuration:**
   - Added `docs/log.md` to `.gitignore`.
   - Updated `backend/src/main/resources/application.properties` to use the `SPRING_DATA_MONGODB_URI` environment variable, fixing the "Connection Refused" error between the backend and MongoDB containers.
+- **Docker Configuration Fixes:**
+  - Fixed `backend/Dockerfile` by adding `WORKDIR /app` and utilizing `mvn dependency:go-offline` to ensure dependencies are properly downloaded before packaging.
+  - Fixed `admin-web/Dockerfile` by changing `COPY package.json package-lock.json ./` to `COPY package*.json ./` to prevent build failures when `package-lock.json` is missing.
+  - Updated `docker-compose.yml` to include `restart: unless-stopped` for MongoDB, and `restart: on-failure` for the backend and admin-web containers to increase resilience during startup.
+- **Infrastructure Fixes:**
+  - Resolved MongoDB connection issue by switching to the standard `SPRING_DATA_MONGODB_URI` environment variable in `docker-compose.yml`.
+  - Suppressed the "Generated Security Password" warning by explicitly setting a security user in the environment.
+  - Cleaned up `application.properties` to rely on Spring Boot's environment variable precedence.
+- **Mobile App UI Updates:**
+  - Updated `LoginScreen.js` to exactly match the provided design mockup.
+  - Replaced the plain "Browse as Guest (Buyer)" text link with a full-width outlined button labeled "Browse Products".
+  - Enhanced `AppButton.js` by adding a new `accent-outline` variant to support the orange/amber border and text style required by the new design.
+  - Adjusted spacing (`marginTop: SPACING.xl`) between the registration link and the browse products button for better visual hierarchy.
+  - Overhauled `RegisterScreen.js` to include all fields required by the `ProducerRegisterRequest` DTO (`firstName`, `lastName`, `nic`, `businessPhone`, `storeTitle`, `homeAddress`, `district`, `province`, `gnDivision`, `businessType`, `startTime`, `endTime`, `operatingDays`).
+  - Overhauled `RegisterScreen.js` to include all fields required by the `ProducerRegisterRequest` DTO (`firstName`, `lastName`, `nic`, `businessPhone`, `storeTitle`, `homeAddress`, `district`, `province`, `gnDivision`, `businessType`, `startTime`, `endTime`, `operatingDays`).
+  - Added Geolocation integration (`@react-native-community/geolocation`) in `RegisterScreen.js` to capture and append `latitude` and `longitude` to the registration payload.
+  - Added a custom dual-button selector for `businessType` to restrict selection to valid options (`small-scale` or `home-gardener`).
+  - Formatted the registration payload correctly to parse `operatingDays` from a comma-separated string to an array before submission, resolving `400 Bad Request` errors.
+  - Fixed an issue where the `RegisterScreen` could not be scrolled. For web browsers, replaced the `SafeAreaView` root with a conditional wrapper, and added explicit `height: '100%'` bounding styles to prevent the flex container from growing indefinitely, which enables `overflow-y: auto`.
+  - Improved `ScrollView` behavior by adding `keyboardShouldPersistTaps="handled"` and hiding vertical scroll indicators.
+- **Backend Configuration Updates:**
+  - Updated `application.properties` to add `http://localhost:8081` to `app.cors.allowed-origins` to prevent CORS blocking when the mobile app is run in a web browser via Expo.
+  - Created `DataInitializer.java` to seed a default admin account (`admin` / `admin123`) on startup if it doesn't already exist, with improved logging to verify the creation process.
+- **Critical Fix — MongoDB Connection (localhost:27017 error):**
+  - **Root Cause:** Commenting out `spring.data.mongodb.uri` in `application.properties` caused Spring Boot to use its default `localhost:27017`, ignoring the `SPRING_DATA_MONGODB_URI` environment variable.
+  - **Fix 1:** Restored `spring.data.mongodb.uri=${MONGO_URI:mongodb://localhost:27017/lankaagridirect_db}` in `application.properties`. This reads the `MONGO_URI` env var when in Docker, and falls back to `localhost` for local development.
+  - **Fix 2:** Changed `docker-compose.yml` to inject `MONGO_URI=mongodb://mongodb:27017/lankaagridirect_db` directly (hardcoded), eliminating the indirection that was silently breaking.
+- **Admin Seeding — Replaced Java DataInitializer with MongoDB Init Script:**
+  - **Root Cause of crash:** `DataInitializer.java` ran at Spring Boot startup and queried MongoDB before the connection was established, causing a `MongoTimeoutException` that crashed the app.
+  - **Fix:** Created `init-mongo.js` at project root, which MongoDB runs automatically on first container creation via `/docker-entrypoint-initdb.d/`. This inserts a pre-hashed admin document into the `admins` collection before the backend ever starts.
+  - Mounted `init-mongo.js` in `docker-compose.yml` under `mongodb` service volumes.
+  - Emptied `DataInitializer.java` to a comment-only file (seeding logic removed).
+  - Removed misleading `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` env vars from `docker-compose.yml`.
+  - Updated `SecurityConfig.java` to define an explicit empty `UserDetailsService`, suppressing Spring Security's automatic password generation and cleaning up startup logs.
+  - **Default Admin Credentials:** username `admin` / password `admin123` (BCrypt hashed in DB).
 
-
+## 2026-05-10
+- **Codebase Scan & Bug Fixes:**
+  - **RegisterScreen.js (Scrolling Fix):** Fixed the Create Account screen not being scrollable on web browsers. Replaced `KeyboardAvoidingView` with a platform-aware `Wrapper` that uses a `View` with `height: '100vh'` on web (bounding the container height), while preserving `KeyboardAvoidingView` behavior on iOS/Android. Added `flex: 1` to the `ScrollView` style on web and increased bottom padding to 60px to ensure all form fields are reachable.
+  - **LoginScreen.js (Shadow Deprecation Fix):** Replaced deprecated inline `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius` style props in the card style with the platform-aware `SHADOW.md` utility from `theme/colors.js`, which uses `boxShadow` on web and native shadow props on mobile. This eliminates the `"shadow*" style props are deprecated` browser console warning.
+  - Added `SHADOW` to the imports in `LoginScreen.js`.
+  - **SecurityConfig.java (Health Check Fix):** Added `/api/v1/health` to the list of fully public endpoints in the Spring Security Configuration. This fixes the 403 Forbidden error when accessing the health check endpoint.
+  - **Admin Web Login Fixes:**
+    - Restored `DataInitializer.java` to guarantee the default `admin` user is seeded on Spring Boot startup, bypassing Docker volume cache issues where `init-mongo.js` might not execute.
+    - Updated `application.properties` to include `127.0.0.1` origins in `app.cors.allowed-origins` to prevent CORS blocking if accessed via IP instead of `localhost`.
+    - Improved Axios error handling in `adminApi.ts` to display a clear "Network Error: Cannot connect to the server" message when the backend is unreachable, instead of a vague "unexpected error".
+  - **Full System Audit & Critical Infrastructure Fixes:**
+    - **[CRITICAL] `docker-compose.yml` — MongoDB URI env var renamed:** Changed env var from `MONGO_URI` to `SPRING_DATA_MONGODB_URI`. Spring Boot 4 relaxed binding natively maps `SPRING_DATA_MONGODB_URI` → `spring.data.mongodb.uri`, guaranteeing the Docker service hostname `mongodb` is used instead of falling back to `localhost:27017`. This is the root cause of all backend failures.
+    - **[ULTIMATE FIX] `backend/Dockerfile` — MongoDB URI CLI Injection:** Added `--spring.data.mongodb.uri=mongodb://mongodb:27017/lankaagridirect_db` directly to the `ENTRYPOINT` command in the `Dockerfile`. This forcefully bypasses Docker Compose's environment injection and Spring Boot's property file loading mechanism, guaranteeing that the `mongodb:27017` connection string is used, completely overriding the stubborn `localhost:27017` fallback on Windows/WSL environments.
+    - **[CRITICAL] `backend/.../DataInitializer.java` — Admin Password Sync:** Modified the DataInitializer to fetch the `admin` document on startup and explicitly synchronize its password to `admin123` via Spring's `PasswordEncoder`. This fixes authentication failures (`AUTH_001`) caused by the raw `init-mongo.js` script inserting an incorrect/unverifiable BCrypt hash.
+    - **[CRITICAL] `docker-compose.yml` — MongoDB healthcheck added:** Added a `healthcheck` to the `mongodb` service using `mongosh --eval db.adminCommand('ping')` and changed the `backend` `depends_on` to use `condition: service_healthy`. This prevents the backend and DataInitializer from running before MongoDB is ready to accept connections (race condition).
+    - **[HIGH] `backend/pom.xml` — DevTools excluded from production JAR:** Added `<excludeDevtools>true</excludeDevtools>` to the Spring Boot Maven plugin configuration. This ensures `spring-boot-devtools` is stripped from the packaged JAR before deployment to Docker, eliminating any potential interference with property loading.
+  - **API Documentation:** Created a comprehensive `API Documentation.md` file in the `docs` folder detailing all endpoints, authentication, request payloads, and response structures for the Spring Boot backend.
+  - **Installation Guide:** Created a comprehensive `Installation & Setup Guide.md` file in the `docs` folder providing clear, step-by-step instructions on cloning the repository, setting up environment variables, running the Docker containers, and starting the mobile application.
+  - **Producer Registration Workflow Finalized:**
+    - Integrated Cloudinary for secure, cloud-based image storage. Updated `application.properties` and added `CloudinaryConfig.java` to support uploads using environment variables.
+    - Created an open `POST /api/v1/upload/image` endpoint in `ImageUploadController.java` returning a secure Cloudinary URL upon successful multipart file upload.
+    - Built a cross-platform helper `cloudinaryUpload.js` to manage direct image uploads from the React Native app.
+    - Overhauled `RegisterScreen.js` UI and logic to capture a profile picture and front/rear NIC photos. After successful registration, it redirects the user directly to the Login screen.
+  - **Producer Dashboard & Settings:**
+    - Refactored `AuthResponse` and `AuthService` to include the `profilePictureUrl` upon authentication.
+    - Updated the global `AuthContext` to support a `refreshUser()` function for seamlessly syncing profile changes without requiring re-authentication.
+    - Enhanced `DashboardScreen.js` to fetch and render the user's profile picture alongside analytical statistics, and correctly linked the "Account Settings" action button.
+    - Created a brand-new `AccountSettingsScreen.js` to allow producers to edit all personal and business profile fields, change passwords, change profile picture, and initiate account deletion.
+    - Added `ProducerProfileResponse.java` and `GET /api/v1/auth/me/profile` endpoint to securely transmit all editable fields back to the producer.
+  - **Product Management:**
+    - Updated `AddProductScreen.js` to natively capture product images via the Cloudinary API when creating or modifying a marketplace listing.
+  - **Buyer Navigation & UI Enhancements:**
+    - Replaced generic emoji-based icons in `BuyerNavigator.js` and `HomeScreen.js` with professional vector icons from `@expo/vector-icons` (`Ionicons`).
+    - Added a global authentication header button in `BuyerNavigator.js`. Guests now see a "Log In" button to enter the authentication flow without being trapped in the Guest view, and logged-in Admins see a "Log Out" button.
+  - **Account Settings & Audit Log Fixes:**
+    - Fixed the "Could not load profile" bug in `AccountSettingsScreen.js` by replacing an undefined `getMe()` API call with the correct `getMyProfile()` function.
+    - Expanded the UI form and `UpdateProfileRequest.java` DTO to support missing fields: `Province`, `District`, `GN Division`, and `Business Type`.
+    - Integrated `ProducerAuditLogRepository` into `AuthService.java`. The system now automatically generates and persists an immutable `"UPDATE_PROFILE"` audit log entry every time a producer updates their settings.
+  - **Platform & Stability Fixes:**
+    - Resolved widespread scrolling issues on Expo Web by implementing a custom `Wrapper` and bounded `ScrollView` height pattern across `RegisterScreen.js`, `AccountSettingsScreen.js`, and `AddProductScreen.js`.
+    - Increased Spring Boot multipart file size limit to **10MB** to support high-resolution image uploads.
+    - Added comprehensive try-catch logging to `ImageUploadController.java` to provide detailed error feedback for Cloudinary failures.
+    - Fixed `AppInput.js` to disable default browser focus outlines, resolving the "thick black border" visual bug on web.
