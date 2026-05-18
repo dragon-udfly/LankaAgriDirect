@@ -30,6 +30,9 @@ public class UpdateProfileRequest {
     private String profilePictureUrl;
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
+    private String currentPassword;
+    private String username;
+    private String name;
     
     private String district;
     private String province;
