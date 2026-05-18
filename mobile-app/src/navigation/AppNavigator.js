@@ -25,9 +25,9 @@ const AppNavigator = () => {
     <Stack.Navigator screenOptions={{headerShown: false}}>
       {!user ? (
         <>
+          <Stack.Screen name="BuyerTabs" component={BuyerNavigator} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="BuyerTabs" component={BuyerNavigator} />
         </>
       ) : user.role === 'PRODUCER' ? (
         <Stack.Screen name="ProducerApp" component={ProducerNavigator} />
