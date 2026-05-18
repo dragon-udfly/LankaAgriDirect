@@ -4,10 +4,11 @@ import { useAdminAuth } from '../context/AuthContext';
 interface NavItem { icon: string; label: string; page: string; }
 
 const NAV: NavItem[] = [
-  { icon: '📊', label: 'Dashboard',     page: 'dashboard' },
-  { icon: '👩‍🌾', label: 'Producers',     page: 'producers' },
-  { icon: '📦', label: 'Products',      page: 'products' },
-  { icon: '📋', label: 'Audit Logs',    page: 'audit-logs' },
+  { icon: '📊', label: 'Dashboard',        page: 'dashboard' },
+  { icon: '👩‍🌾', label: 'Producers',        page: 'producers' },
+  { icon: '📦', label: 'Products',         page: 'products' },
+  { icon: '📋', label: 'Audit Logs',       page: 'audit-logs' },
+  { icon: '⚙️', label: 'Account Settings', page: 'account-settings' },
 ];
 
 interface Props { activePage: string; onNavigate: (page: string) => void; }
