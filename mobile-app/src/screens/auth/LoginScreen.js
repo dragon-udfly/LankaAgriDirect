@@ -8,7 +8,6 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
 import {useAuth} from '../../context/AuthContext';
 import {login} from '../../api/authApi';
 import AppInput from '../../components/AppInput';
@@ -47,11 +46,6 @@ const LoginScreen = ({navigation}) => {
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled">
-        {/* Back Button */}
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('BuyerTabs')}>
-          <Ionicons name="arrow-back" size={28} color={COLORS.textSecondary} />
-        </TouchableOpacity>
-
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>🌿</Text>
@@ -96,6 +90,13 @@ const LoginScreen = ({navigation}) => {
               <Text style={styles.registerBold}>Create an account</Text>
             </Text>
           </TouchableOpacity>
+
+          <AppButton
+            title="Browse Products"
+            variant="accent-outline"
+            onPress={() => navigation.navigate('BuyerTabs')}
+            style={styles.browseButton}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -142,11 +143,7 @@ const styles = StyleSheet.create({
   registerLink: {marginTop: SPACING.md, alignItems: 'center'},
   registerText: {fontSize: 14, color: COLORS.textSecondary},
   registerBold: {color: COLORS.primary, ...FONTS.semiBold},
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: SPACING.sm,
-    padding: SPACING.xs,
-  },
+  browseButton: {marginTop: SPACING.xl},
 });
 
 export default LoginScreen;
