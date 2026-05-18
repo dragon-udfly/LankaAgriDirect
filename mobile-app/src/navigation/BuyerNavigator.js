@@ -1,7 +1,7 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
-import {Text, TouchableOpacity} from 'react-native';
+import {Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import HomeScreen from '../screens/buyer/HomeScreen';
 import ProductDetailScreen from '../screens/buyer/ProductDetailScreen';
@@ -28,19 +28,34 @@ const HomeStack = () => {
         options={({navigation}) => ({
           title: '🌿 Lanka Agri-Direct',
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => (user ? signOut() : navigation.navigate('Login'))}
-              style={{
-                marginRight: 16,
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 16,
-              }}>
-              <Text style={{color: COLORS.white, fontWeight: '600', fontSize: 13}}>
-                {user ? 'Log Out' : 'Log In'}
-              </Text>
-            </TouchableOpacity>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              {!user && (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Register')}
+                  style={{
+                    marginRight: 12,
+                    paddingHorizontal: 8,
+                    paddingVertical: 6,
+                  }}>
+                  <Text style={{color: COLORS.white, fontWeight: '600', fontSize: 13}}>
+                    Register
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={() => (user ? signOut() : navigation.navigate('Login'))}
+                style={{
+                  marginRight: 16,
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 16,
+                }}>
+                <Text style={{color: COLORS.white, fontWeight: '600', fontSize: 13}}>
+                  {user ? 'Log Out' : 'Log In'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           ),
         })}
       />
