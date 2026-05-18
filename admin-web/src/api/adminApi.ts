@@ -40,6 +40,13 @@ export default api;
 // ─── Auth ────────────────────────────────────────────────────────────────────
 export const adminLogin = (data: { loginId: string; password: string }) =>
   api.post('/auth/login', data);
+export const getAdminProfile = () => api.get('/auth/me/profile');
+export const updateAdminProfile = (data: {
+  name?: string;
+  username?: string;
+  password?: string;
+  currentPassword?: string;
+}) => api.put('/auth/profile', data);
 
 // ─── Producers ───────────────────────────────────────────────────────────────
 export const getProducers = (params?: object) => api.get('/admin/producers', { params });
