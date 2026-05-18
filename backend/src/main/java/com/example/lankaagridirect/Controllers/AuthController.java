@@ -48,17 +48,23 @@ public class AuthController {
         return ResponseEntity.ok(authService.getCurrentUser(userId, role));
     }
 
+    private String getUserRole(Authentication auth) {
+        return auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+    }
+
     @GetMapping("/me/profile")
     public ResponseEntity<?> getMyProfile(Authentication auth) {
         String userId = (String) auth.getPrincipal();
-        return ResponseEntity.ok(authService.getMyProfile(userId));
+        String role = getUserRole(auth);
+        return ResponseEntity.ok(authService.getMyProfile(userId, role));
     }
 
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse> updateProfile(Authentication auth,
                                                       @Valid @RequestBody UpdateProfileRequest req) {
         String userId = (String) auth.getPrincipal();
-        authService.updateProfile(userId, req);
+        String role = getUserRole(auth);
+        authService.updateProfile(userId, role, req);
         return ResponseEntity.ok(new ApiResponse("Profile updated successfully."));
     }
 
