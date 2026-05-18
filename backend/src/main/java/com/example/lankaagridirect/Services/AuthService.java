@@ -1,6 +1,7 @@
 package com.example.lankaagridirect.Services;
 
 import com.example.lankaagridirect.DTOs.request.*;
+import com.example.lankaagridirect.DTOs.response.AdminProfileResponse;
 import com.example.lankaagridirect.DTOs.response.AuthResponse;
 import com.example.lankaagridirect.DTOs.response.ProducerAdminResponse;
 import com.example.lankaagridirect.Exception.BusinessRuleException;
@@ -147,6 +148,49 @@ public class AuthService {
     }
 
     // ─── Get My Full Profile (for Account Settings) ────────────────────────────
+    public Object getMyProfile(String userId, String role) {
+        if ("ADMIN".equals(role)) {
+            Admin admin = adminRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
+            var resp = new AdminProfileResponse();
+            resp.setId(admin.getId());
+            resp.setName(admin.getName());
+            resp.setUsername(admin.getUsername());
+            resp.setRole("ADMIN");
+            return resp;
+        }
+        return getMyProfile(userId);
+    }
+
+    public void updateProfile(String userId, String role, UpdateProfileRequest req) {
+        if ("ADMIN".equals(role)) {
+            Admin admin = adminRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
+            if (req.getName() != null) {
+                admin.setName(req.getName());
+            }
+            if (req.getUsername() != null && !req.getUsername().equals(admin.getUsername())) {
+                if (adminRepository.existsByUsername(req.getUsername())) {
+                    throw new DuplicateResourceException("Username '" + req.getUsername() + "' is already taken.");
+                }
+                admin.setUsername(req.getUsername());
+            }
+            if (req.getPassword() != null) {
+                if (req.getCurrentPassword() == null || req.getCurrentPassword().isBlank()) {
+                    throw new BusinessRuleException("Current password is required to change password.");
+                }
+                if (!passwordEncoder.matches(req.getCurrentPassword(), admin.getPassword())) {
+                    throw new BadCredentialsException("Current password is incorrect.");
+                }
+                admin.setPassword(passwordEncoder.encode(req.getPassword()));
+            }
+            admin.setModifiedAt(LocalDateTime.now());
+            adminRepository.save(admin);
+            return;
+        }
+        updateProfile(userId, req);
+    }
+
     public com.example.lankaagridirect.DTOs.response.ProducerProfileResponse getMyProfile(String producerId) {
         Producer producer = producerRepository.findById(producerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producer not found"));
