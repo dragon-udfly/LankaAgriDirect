@@ -9,6 +9,7 @@ const ProducersPage = () => {
   const [success, setSuccess] = useState('');
   const [blockReason, setBlockReason] = useState('');
   const [blockingId, setBlockingId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; title: string } | null>(null);
 
   const load = async () => {
     setLoading(true); setError('');
@@ -22,6 +23,19 @@ const ProducersPage = () => {
   useEffect(() => { load(); }, [status]);
 
   const flash = (msg: string) => { setSuccess(msg); setTimeout(() => setSuccess(''), 3000); };
+
+  const parseNicPhotos = (nicPhotoUrl?: string) => {
+    if (!nicPhotoUrl) return { front: null, back: null };
+    try {
+      const parsed = JSON.parse(nicPhotoUrl);
+      if (Array.isArray(parsed)) {
+        return { front: parsed[0] || null, back: parsed[1] || null };
+      }
+      return { front: parsed, back: null };
+    } catch {
+      return { front: nicPhotoUrl, back: null };
+    }
+  };
 
   const handleVerify = async (id: string, name: string) => {
     try { await verifyProducer(id); flash(`✅ ${name} verified successfully.`); load(); }
@@ -82,7 +96,18 @@ const ProducersPage = () => {
                             <button className="btn btn-danger btn-sm" onClick={() => setBlockingId(p.id)}>🚫 Block</button>
                           )}
                           {p.nicPhotoUrl && (
-                            <a href={p.nicPhotoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm">🪪 NIC</a>
+                            <>
+                              {parseNicPhotos(p.nicPhotoUrl).front && (
+                                <button className="btn btn-secondary btn-sm" onClick={() => setSelectedImage({ url: parseNicPhotos(p.nicPhotoUrl).front!, title: 'NIC - Front' })}>
+                                  🪪 Front
+                                </button>
+                              )}
+                              {parseNicPhotos(p.nicPhotoUrl).back && (
+                                <button className="btn btn-secondary btn-sm" onClick={() => setSelectedImage({ url: parseNicPhotos(p.nicPhotoUrl).back!, title: 'NIC - Back' })}>
+                                  🪪 Back
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>
@@ -110,6 +135,60 @@ const ProducersPage = () => {
           </div>
         )}
       </div>
+
+      {selectedImage && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }} onClick={() => setSelectedImage(null)}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '20px',
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            position: 'relative'
+          }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSelectedImage(null)} style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              color: '#666',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              ✕
+            </button>
+            <img src={selectedImage.url} alt={selectedImage.title} style={{
+              maxWidth: '100%',
+              maxHeight: 'calc(90vh - 100px)',
+              objectFit: 'contain'
+            }} />
+            <div style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>
+              {selectedImage.title}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
