@@ -42,8 +42,9 @@ const HomeScreen = ({navigation}) => {
         if (searchQuery.trim()) params.search = searchQuery.trim();
 
         const res = await getAllProducts(params);
-        const data = res.data.data || [];
-        const pagination = res.data.pagination;
+        // Spring Page response has 'content' array, not 'data'
+        const data = res.data.content || [];
+        const totalPages = res.data.totalPages || 1;
 
         if (reset) {
           setProducts(data);
@@ -52,7 +53,7 @@ const HomeScreen = ({navigation}) => {
           setProducts(prev => [...prev, ...data]);
           setPage(prev => prev + 1);
         }
-        setHasMore(pagination ? currentPage < pagination.pages : false);
+        setHasMore(currentPage < totalPages);
       } catch (err) {
         setError(err.message || 'Failed to load products. Please try again.');
       } finally {
