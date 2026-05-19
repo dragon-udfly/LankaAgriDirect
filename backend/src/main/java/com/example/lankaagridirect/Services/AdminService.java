@@ -1,22 +1,29 @@
 package com.example.lankaagridirect.Services;
 
-import com.example.lankaagridirect.DTOs.response.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.example.lankaagridirect.DTOs.response.ProducerAdminResponse;
+import com.example.lankaagridirect.DTOs.response.ProductStatsResponse;
+import com.example.lankaagridirect.DTOs.response.UserStatsResponse;
+import com.example.lankaagridirect.Exception.BusinessRuleException;
+import com.example.lankaagridirect.Exception.DuplicateResourceException;
 import com.example.lankaagridirect.Exception.ResourceNotFoundException;
+import com.example.lankaagridirect.Models.Admin;
 import com.example.lankaagridirect.Models.Producer;
 import com.example.lankaagridirect.Repositories.AdminRepository;
 import com.example.lankaagridirect.Repositories.CategoryRepository;
 import com.example.lankaagridirect.Repositories.ProducerRepository;
 import com.example.lankaagridirect.Repositories.ProductRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -26,15 +33,17 @@ public class AdminService {
     private final AdminRepository adminRepository;
     private final CategoryRepository categoryRepository;
     private final AuditLogService auditLogService;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminService(ProducerRepository producerRepository, ProductRepository productRepository,
                         AdminRepository adminRepository, CategoryRepository categoryRepository,
-                        AuditLogService auditLogService) {
+                        AuditLogService auditLogService, PasswordEncoder passwordEncoder) {
         this.producerRepository = producerRepository;
         this.productRepository = productRepository;
         this.adminRepository = adminRepository;
         this.categoryRepository = categoryRepository;
         this.auditLogService = auditLogService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // ─── Producer Management ──────────────────────────────────────────────────
@@ -160,5 +169,66 @@ public class AdminService {
         res.setCreatedAt(p.getCreatedAt());
         res.setModifiedAt(p.getModifiedAt());
         return res;
+    }
+
+    // ─── Admin Account Management ─────────────────────────────────────────────
+    public void changeAdminPassword(String adminId, String currentPassword, String newPassword) {
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
+
+        if (!passwordEncoder.matches(currentPassword, admin.getPassword())) {
+            throw new BusinessRuleException("Current password is incorrect");
+        }
+
+        admin.setPassword(passwordEncoder.encode(newPassword));
+        admin.setModifiedAt(LocalDateTime.now());
+        adminRepository.save(admin);
+        auditLogService.logAdminAction(adminId, "CHANGE_PASSWORD",
+                "Admin " + admin.getName() + " changed their password");
+    }
+
+    public void addAdminEmail(String adminId, String email) {
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
+
+        if (adminRepository.existsByEmailAndIdNot(email, adminId)) {
+            throw new DuplicateResourceException("Email already in use by another admin");
+        }
+
+        admin.setEmail(email);
+        admin.setModifiedAt(LocalDateTime.now());
+        adminRepository.save(admin);
+        auditLogService.logAdminAction(adminId, "ADD_EMAIL",
+                "Admin " + admin.getName() + " added email: " + email);
+    }
+
+    public String createNewAdmin(String adminId, String name, String email, String password, String role) {
+        // Verify that the current admin has permission to create other admins
+        Admin currentAdmin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("Current admin not found"));
+
+        if (!currentAdmin.getRole().equals("Admin")) {
+            throw new BusinessRuleException("Only Admin users can create new admin accounts");
+        }
+
+        if (adminRepository.existsByEmail(email)) {
+            throw new DuplicateResourceException("Email already in use");
+        }
+
+        Admin newAdmin = new Admin();
+        newAdmin.setName(name);
+        newAdmin.setEmail(email);
+        newAdmin.setUsername(email); // Use email as username
+        newAdmin.setPassword(passwordEncoder.encode(password));
+        newAdmin.setRole(role);
+        newAdmin.setIsDeleted(false);
+        newAdmin.setCreatedAt(LocalDateTime.now());
+        newAdmin.setModifiedAt(LocalDateTime.now());
+
+        Admin savedAdmin = adminRepository.save(newAdmin);
+        auditLogService.logAdminAction(adminId, "CREATE_ADMIN",
+                "Created new admin: " + name + " (" + email + ") with role: " + role);
+
+        return savedAdmin.getId();
     }
 }

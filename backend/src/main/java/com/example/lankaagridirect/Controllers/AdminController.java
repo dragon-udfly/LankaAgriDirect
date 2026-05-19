@@ -1,22 +1,45 @@
 package com.example.lankaagridirect.Controllers;
 
-import com.example.lankaagridirect.DTOs.request.*;
-import com.example.lankaagridirect.DTOs.response.*;
-import com.example.lankaagridirect.Models.AuditLog;
-import com.example.lankaagridirect.Models.Category;
-import com.example.lankaagridirect.Models.Product;
-import com.example.lankaagridirect.Models.ProducerAuditLog;
-import com.example.lankaagridirect.Services.*;
-import jakarta.validation.Valid;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.example.lankaagridirect.DTOs.request.AddEmailRequest;
+import com.example.lankaagridirect.DTOs.request.AnnouncementRequest;
+import com.example.lankaagridirect.DTOs.request.BlockProducerRequest;
+import com.example.lankaagridirect.DTOs.request.CategoryRequest;
+import com.example.lankaagridirect.DTOs.request.ChangePasswordRequest;
+import com.example.lankaagridirect.DTOs.request.CreateAdminRequest;
+import com.example.lankaagridirect.DTOs.request.SuspendProductRequest;
+import com.example.lankaagridirect.DTOs.response.AnalyticsResponse;
+import com.example.lankaagridirect.DTOs.response.ApiResponse;
+import com.example.lankaagridirect.DTOs.response.ProducerAdminResponse;
+import com.example.lankaagridirect.DTOs.response.ProductStatsResponse;
+import com.example.lankaagridirect.DTOs.response.UserStatsResponse;
+import com.example.lankaagridirect.Models.AuditLog;
+import com.example.lankaagridirect.Models.Category;
+import com.example.lankaagridirect.Models.ProducerAuditLog;
+import com.example.lankaagridirect.Models.Product;
+import com.example.lankaagridirect.Services.AdminService;
+import com.example.lankaagridirect.Services.AnalyticsService;
+import com.example.lankaagridirect.Services.AuditLogService;
+import com.example.lankaagridirect.Services.CategoryService;
+import com.example.lankaagridirect.Services.ProductService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -190,5 +213,30 @@ public class AdminController {
                 "Sent announcement: '" + req.getTitle() + "' to roles: " + req.getTargetRoles());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse("Announcement recorded. Push notification service integration pending."));
+    }
+
+    // ─── Admin Account Management ─────────────────────────────────────────────
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse> changePassword(Authentication auth,
+                                                       @Valid @RequestBody ChangePasswordRequest req) {
+        adminService.changeAdminPassword((String) auth.getPrincipal(), 
+                req.getCurrentPassword(), req.getNewPassword());
+        return ResponseEntity.ok(new ApiResponse("Password changed successfully."));
+    }
+
+    @PostMapping("/add-email")
+    public ResponseEntity<ApiResponse> addEmail(Authentication auth,
+                                                 @Valid @RequestBody AddEmailRequest req) {
+        adminService.addAdminEmail((String) auth.getPrincipal(), req.getEmail());
+        return ResponseEntity.ok(new ApiResponse("Email added successfully. Please verify your email."));
+    }
+
+    @PostMapping("/create-admin")
+    public ResponseEntity<ApiResponse> createAdmin(Authentication auth,
+                                                    @Valid @RequestBody CreateAdminRequest req) {
+        String newAdminId = adminService.createNewAdmin((String) auth.getPrincipal(),
+                req.getName(), req.getEmail(), req.getPassword(), req.getRole());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse("Admin created successfully.", newAdminId));
     }
 }
