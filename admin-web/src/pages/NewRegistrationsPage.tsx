@@ -34,8 +34,21 @@ const NewRegistrationsPage = () => {
     setError('');
     try {
       const res = await getProducers({ status: 'pending' });
-      const pendingProducers = res.data.data || res.data.content || [];
-      setProducers(pendingProducers.slice(0, 10)); // Limit to 10 latest registrations
+      const rawProducers = res.data.data || res.data.content || [];
+      // Map backend response to frontend Producer interface
+      const mappedProducers = rawProducers.map((p: any) => ({
+        id: p.id,
+        name: `${p.firstName || ''} ${p.lastName || ''}`.trim(),
+        email: p.email || '',
+        phone: p.businessPhone || p.mobilePhone || '',
+        location: p.homeAddress || p.district || '',
+        nicNumber: p.nic || '',
+        profileImage: p.profilePictureUrl,
+        nicPhotoUrl: p.nicPhotoUrl,
+        registeredDate: p.createdAt,
+        status: p.verificationStatus,
+      }));
+      setProducers(mappedProducers.slice(0, 10)); // Limit to 10 latest registrations
     } catch (err: any) {
       setError(err.message || 'Failed to load registrations');
     } finally {
@@ -46,7 +59,21 @@ const NewRegistrationsPage = () => {
   const loadProducerDetails = async (producerId: string) => {
     try {
       const res = await getProducerById(producerId);
-      setSelectedProducer(res.data.data || res.data);
+      const data = res.data.data || res.data;
+      // Map backend response to frontend Producer interface
+      const mappedProducer: Producer = {
+        id: data.id,
+        name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+        email: data.email,
+        phone: data.businessPhone || data.mobilePhone || '',
+        location: data.homeAddress || data.district || '',
+        nicNumber: data.nic,
+        profileImage: data.profilePictureUrl,
+        nicPhotoUrl: data.nicPhotoUrl,
+        registeredDate: data.createdAt,
+        status: data.verificationStatus,
+      };
+      setSelectedProducer(mappedProducer);
     } catch (err: any) {
       setError('Failed to load producer details');
     }
