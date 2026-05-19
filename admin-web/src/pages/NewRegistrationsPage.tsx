@@ -101,6 +101,39 @@ const NewRegistrationsPage = () => {
     return { front: undefined, back: undefined };
   };
 
+  const formatRegistrationDate = (dateValue?: any) => {
+    if (!dateValue) return 'Not available';
+    try {
+      // Handle various date formats
+      let date: Date;
+      
+      if (typeof dateValue === 'string') {
+        // Remove timezone info if present and parse
+        const cleanedDate = dateValue.replace('Z', '').split('.')[0];
+        date = new Date(cleanedDate);
+      } else if (typeof dateValue === 'number') {
+        date = new Date(dateValue);
+      } else {
+        date = new Date(dateValue);
+      }
+      
+      if (isNaN(date.getTime())) {
+        return 'Invalid date format';
+      }
+      
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    } catch (e) {
+      return 'Invalid date format';
+    }
+  };
+
   if (loading) {
     return (
       <div className="page">
@@ -144,7 +177,7 @@ const NewRegistrationsPage = () => {
                   <div className="registration-card-header">
                     <h5>{producer.name}</h5>
                     <span className="registration-date">
-                      {new Date(producer.registeredDate).toLocaleDateString()}
+                      {formatRegistrationDate(producer.registeredDate).split(',')[0]}
                     </span>
                   </div>
                   <div className="registration-card-info">
@@ -282,7 +315,7 @@ const NewRegistrationsPage = () => {
                   </div>
                   <div className="detail-item">
                     <label>Registration Date</label>
-                    <p>{new Date(selectedProducer.registeredDate).toLocaleString()}</p>
+                    <p>{formatRegistrationDate(selectedProducer.registeredDate)}</p>
                   </div>
                 </div>
               </div>
