@@ -24,7 +24,11 @@ api.interceptors.response.use(
     if (!err.response) {
       msg = 'Network Error: Cannot connect to the server. Please check if the backend is running.';
     } else {
-      msg = err.response?.data?.message || err.response?.data?.error?.message || msg;
+      if (typeof err.response?.data === 'string' && err.response.data.includes('<html')) {
+        msg = 'Server Error: The backend returned an HTML error page. Ensure the API is running correctly.';
+      } else {
+        msg = err.response?.data?.message || err.response?.data?.error?.message || msg;
+      }
     }
 
     return Promise.reject({
