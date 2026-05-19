@@ -16,9 +16,9 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const res = await adminLogin({ loginId, password });
-      const { token, id, name, role } = res.data;
+      const { token, id, name, role, email } = res.data;
       if (role !== 'ADMIN') { setError('Access denied. Admin accounts only.'); return; }
-      signIn(token, { id, name, role });
+      signIn(token, { id, name, email, role });
     } catch (err: any) {
       setError(err.message || 'Login failed.');
     } finally {
