@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Platform,
 } from 'react-native';
 import {getAllProducts} from '../../api/productApi';
 import {Ionicons} from '@expo/vector-icons';
