@@ -10,6 +10,7 @@ interface Producer {
   location: string;
   nicNumber: string;
   profileImage?: string;
+  nicPhotoUrl?: string;
   nicImageFront?: string;
   nicImageBack?: string;
   bankStatement?: string;
@@ -54,6 +55,23 @@ const NewRegistrationsPage = () => {
   const handleSelectProducer = (producer: Producer) => {
     setSelectedProducer(producer);
     loadProducerDetails(producer.id);
+  };
+
+  const parseNicPhotos = (nicPhotoUrl?: string) => {
+    if (!nicPhotoUrl) return { front: undefined, back: undefined };
+    try {
+      const parsed = JSON.parse(nicPhotoUrl);
+      if (Array.isArray(parsed)) {
+        return {
+          front: parsed[0],
+          back: parsed[1],
+        };
+      }
+    } catch (e) {
+      // If not valid JSON, treat it as a single URL (legacy format)
+      return { front: nicPhotoUrl, back: undefined };
+    }
+    return { front: undefined, back: undefined };
   };
 
   if (loading) {
@@ -148,19 +166,19 @@ const NewRegistrationsPage = () => {
                 )}
 
                 {/* NIC Front */}
-                {selectedProducer.nicImageFront && (
+                {parseNicPhotos(selectedProducer.nicPhotoUrl).front && (
                   <div className="gallery-item">
                     <div className="gallery-label">NIC - Front</div>
                     <div
                       className="gallery-thumbnail"
                       onClick={() =>
                         setSelectedImage({
-                          url: selectedProducer.nicImageFront!,
+                          url: parseNicPhotos(selectedProducer.nicPhotoUrl).front!,
                           title: 'NIC - Front',
                         })
                       }
                     >
-                      <img src={selectedProducer.nicImageFront} alt="NIC Front" />
+                      <img src={parseNicPhotos(selectedProducer.nicPhotoUrl).front} alt="NIC Front" />
                       <div className="thumbnail-overlay">
                         <span>👁️ View</span>
                       </div>
@@ -169,19 +187,19 @@ const NewRegistrationsPage = () => {
                 )}
 
                 {/* NIC Back */}
-                {selectedProducer.nicImageBack && (
+                {parseNicPhotos(selectedProducer.nicPhotoUrl).back && (
                   <div className="gallery-item">
                     <div className="gallery-label">NIC - Back</div>
                     <div
                       className="gallery-thumbnail"
                       onClick={() =>
                         setSelectedImage({
-                          url: selectedProducer.nicImageBack!,
+                          url: parseNicPhotos(selectedProducer.nicPhotoUrl).back!,
                           title: 'NIC - Back',
                         })
                       }
                     >
-                      <img src={selectedProducer.nicImageBack} alt="NIC Back" />
+                      <img src={parseNicPhotos(selectedProducer.nicPhotoUrl).back} alt="NIC Back" />
                       <div className="thumbnail-overlay">
                         <span>👁️ View</span>
                       </div>
