@@ -1,8 +1,16 @@
 package com.example.lankaagridirect.Services;
 
-import com.example.lankaagridirect.DTOs.request.*;
+import java.time.LocalDateTime;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.example.lankaagridirect.DTOs.request.AdminRegisterRequest;
+import com.example.lankaagridirect.DTOs.request.LoginRequest;
+import com.example.lankaagridirect.DTOs.request.ProducerRegisterRequest;
+import com.example.lankaagridirect.DTOs.request.UpdateProfileRequest;
 import com.example.lankaagridirect.DTOs.response.AuthResponse;
-import com.example.lankaagridirect.DTOs.response.ProducerAdminResponse;
 import com.example.lankaagridirect.Exception.BusinessRuleException;
 import com.example.lankaagridirect.Exception.DuplicateResourceException;
 import com.example.lankaagridirect.Exception.ResourceNotFoundException;
@@ -10,14 +18,9 @@ import com.example.lankaagridirect.Models.Admin;
 import com.example.lankaagridirect.Models.Producer;
 import com.example.lankaagridirect.Models.ProducerAuditLog;
 import com.example.lankaagridirect.Repositories.AdminRepository;
-import com.example.lankaagridirect.Repositories.ProducerRepository;
 import com.example.lankaagridirect.Repositories.ProducerAuditLogRepository;
+import com.example.lankaagridirect.Repositories.ProducerRepository;
 import com.example.lankaagridirect.Security.JwtUtil;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
@@ -108,7 +111,7 @@ public class AuthService {
                 throw new BadCredentialsException("Invalid credentials");
             }
             String token = jwtUtil.generateToken(admin.getId(), "ADMIN");
-            return new AuthResponse(token, admin.getId(), admin.getName(), "ADMIN", null, null);
+            return new AuthResponse(token, admin.getId(), admin.getName(), "ADMIN", admin.getEmail(), null, null);
         }
 
         // Try producer — loginId can be NIC, email, or business phone
@@ -129,7 +132,7 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(producer.getId(), "PRODUCER");
         String name = producer.getFirstName() + " " + producer.getLastName();
-        return new AuthResponse(token, producer.getId(), name, "PRODUCER", producer.getVerificationStatus(), producer.getProfilePictureUrl());
+        return new AuthResponse(token, producer.getId(), name, "PRODUCER", producer.getEmail(), producer.getVerificationStatus(), producer.getProfilePictureUrl());
     }
 
     // ─── Get Current User ─────────────────────────────────────────────────────
@@ -138,11 +141,11 @@ public class AuthService {
             Producer p = producerRepository.findById(userId)
                     .orElseThrow(() -> new ResourceNotFoundException("Producer not found"));
             return new AuthResponse(null, p.getId(),
-                    p.getFirstName() + " " + p.getLastName(), "PRODUCER", p.getVerificationStatus(), p.getProfilePictureUrl());
+                    p.getFirstName() + " " + p.getLastName(), "PRODUCER", p.getEmail(), p.getVerificationStatus(), p.getProfilePictureUrl());
         } else {
             Admin a = adminRepository.findById(userId)
                     .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
-            return new AuthResponse(null, a.getId(), a.getName(), "ADMIN", null, null);
+            return new AuthResponse(null, a.getId(), a.getName(), "ADMIN", a.getEmail(), null, null);
         }
     }
 
