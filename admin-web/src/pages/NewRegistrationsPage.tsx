@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getProducers, getProducerById } from '../api/adminApi';
 import '../styles/NewRegistrations.css';
 
