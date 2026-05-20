@@ -14,6 +14,8 @@ import {COLORS, SPACING, FONTS, RADIUS, SHADOW} from '../../theme/colors';
 import AppInput from '../../components/AppInput';
 import AppButton from '../../components/AppButton';
 import AlertBox from '../../components/AlertBox';
+import DaySelector from '../../components/DaySelector';
+import TimeInput from '../../components/TimeInput';
 import {registerProducer} from '../../api/authApi';
 import {uploadImage} from '../../api/cloudinaryUpload';
 import Geolocation from '@react-native-community/geolocation';
@@ -214,6 +216,12 @@ const RegisterScreen = ({navigation}) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         style={Platform.OS === 'web' ? {flex: 1} : undefined}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
+          <Text style={styles.backIcon}>← Back</Text>
+        </TouchableOpacity>
+
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Join Lanka Agri-Direct as a Producer</Text>
 
@@ -331,30 +339,29 @@ const RegisterScreen = ({navigation}) => {
             error={fieldErrors.storeTitle}
           />
 
-          <AppInput
-            label="Operating Days (Comma separated)"
-            placeholder="e.g. Mon, Tue, Wed"
+          <DaySelector
+            label="Operating Days"
             value={formData.operatingDays}
-            onChangeText={val => setField('operatingDays', val)}
+            onChange={val => setField('operatingDays', val)}
             error={fieldErrors.operatingDays}
           />
 
           <View style={styles.row}>
             <View style={styles.halfInput}>
-              <AppInput
+              <TimeInput
                 label="Start Time"
                 placeholder="e.g. 08:00 AM"
                 value={formData.startTime}
-                onChangeText={val => setField('startTime', val)}
+                onChange={val => setField('startTime', val)}
                 error={fieldErrors.startTime}
               />
             </View>
             <View style={styles.halfInput}>
-              <AppInput
+              <TimeInput
                 label="End Time"
                 placeholder="e.g. 05:00 PM"
                 value={formData.endTime}
-                onChangeText={val => setField('endTime', val)}
+                onChange={val => setField('endTime', val)}
                 error={fieldErrors.endTime}
               />
             </View>
@@ -501,6 +508,17 @@ const styles = StyleSheet.create({
     ...FONTS.body,
     color: COLORS.textLight,
     marginBottom: SPACING.xxl,
+  },
+  backButton: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
+    alignSelf: 'flex-start',
+  },
+  backIcon: {
+    fontSize: 14,
+    color: COLORS.primary,
+    ...FONTS.semiBold,
   },
   form: {
     width: '100%',

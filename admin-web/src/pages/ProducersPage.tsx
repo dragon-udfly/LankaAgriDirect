@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getProducers, verifyProducer, blockProducer } from '../api/adminApi';
+import { getProducers, verifyProducer, blockProducer, unblockProducer, deleteProducer } from '../api/adminApi';
 
 const ProducersPage = () => {
   const [producers, setProducers] = useState<any[]>([]);
@@ -9,6 +9,9 @@ const ProducersPage = () => {
   const [success, setSuccess] = useState('');
   const [blockReason, setBlockReason] = useState('');
   const [blockingId, setBlockingId] = useState<string | null>(null);
+  const [unblockingId, setUnblockingId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; title: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true); setError('');
@@ -23,6 +26,19 @@ const ProducersPage = () => {
 
   const flash = (msg: string) => { setSuccess(msg); setTimeout(() => setSuccess(''), 3000); };
 
+  const parseNicPhotos = (nicPhotoUrl?: string) => {
+    if (!nicPhotoUrl) return { front: null, back: null };
+    try {
+      const parsed = JSON.parse(nicPhotoUrl);
+      if (Array.isArray(parsed)) {
+        return { front: parsed[0] || null, back: parsed[1] || null };
+      }
+      return { front: parsed, back: null };
+    } catch {
+      return { front: nicPhotoUrl, back: null };
+    }
+  };
+
   const handleVerify = async (id: string, name: string) => {
     try { await verifyProducer(id); flash(`✅ ${name} verified successfully.`); load(); }
     catch (err: any) { setError(err.message); }
@@ -34,6 +50,22 @@ const ProducersPage = () => {
       await blockProducer(id, blockReason);
       setBlockingId(null); setBlockReason('');
       flash(`🚫 ${name} has been blocked.`); load();
+    } catch (err: any) { setError(err.message); }
+  };
+
+  const handleUnblock = async (id: string, name: string) => {
+    try {
+      await unblockProducer(id);
+      setUnblockingId(null);
+      flash(`🔓 ${name} has been unblocked.`); load();
+    } catch (err: any) { setError(err.message); }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    try {
+      await deleteProducer(id);
+      setDeletingId(null);
+      flash(`🗑️ ${name} has been deleted.`); load();
     } catch (err: any) { setError(err.message); }
   };
 
@@ -74,16 +106,33 @@ const ProducersPage = () => {
                       <td><span className={`badge badge-${p.verificationStatus}`}>{p.verificationStatus}</span></td>
                       <td>{new Date(p.createdAt).toLocaleDateString()}</td>
                       <td>
-                        <div className="btn-group">
+                        <div className="btn-group" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {p.verificationStatus === 'pending' && (
                             <button className="btn btn-success btn-sm" onClick={() => handleVerify(p.id, p.firstName)}>✅ Verify</button>
+                          )}
+                          {p.verificationStatus === 'blocked' && (
+                            <button className="btn btn-info btn-sm" onClick={() => setUnblockingId(p.id)}>🔓 Unblock</button>
                           )}
                           {p.verificationStatus !== 'blocked' && (
                             <button className="btn btn-danger btn-sm" onClick={() => setBlockingId(p.id)}>🚫 Block</button>
                           )}
                           {p.nicPhotoUrl && (
-                            <a href={p.nicPhotoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm">🪪 NIC</a>
+                            <>
+                              {parseNicPhotos(p.nicPhotoUrl).front && (
+                                <button className="btn btn-secondary btn-sm" onClick={() => setSelectedImage({ url: parseNicPhotos(p.nicPhotoUrl).front!, title: 'NIC - Front' })}>
+                                  🪪 Front
+                                </button>
+                              )}
+                              {parseNicPhotos(p.nicPhotoUrl).back && (
+                                <button className="btn btn-secondary btn-sm" onClick={() => setSelectedImage({ url: parseNicPhotos(p.nicPhotoUrl).back!, title: 'NIC - Back' })}>
+                                  🪪 Back
+                                </button>
+                              )}
+                            </>
                           )}
+                          <button className="btn btn-danger btn-sm" onClick={() => setDeletingId(p.id)} title="Delete this producer permanently">
+                            🗑️ Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -103,6 +152,28 @@ const ProducersPage = () => {
                         </td>
                       </tr>
                     )}
+                    {unblockingId === p.id && (
+                      <tr style={{ background: '#F0F8FF' }}>
+                        <td colSpan={7} style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ flex: 1, color: '#1976D2', fontWeight: 'bold' }}>Are you sure you want to unblock this producer? They will regain access to the platform.</span>
+                            <button className="btn btn-info btn-sm" onClick={() => handleUnblock(p.id, p.firstName)}>Yes, Unblock</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setUnblockingId(null)}>Cancel</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {deletingId === p.id && (
+                      <tr style={{ background: '#FFE8E8' }}>
+                        <td colSpan={7} style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ flex: 1, color: '#D32F2F', fontWeight: 'bold' }}>Are you sure you want to permanently delete this producer? This action cannot be undone.</span>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id, p.firstName)}>Yes, Delete</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setDeletingId(null)}>Cancel</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </React.Fragment>
                 ))}
               </tbody>
@@ -110,6 +181,60 @@ const ProducersPage = () => {
           </div>
         )}
       </div>
+
+      {selectedImage && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }} onClick={() => setSelectedImage(null)}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '20px',
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            position: 'relative'
+          }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSelectedImage(null)} style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              color: '#666',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              ✕
+            </button>
+            <img src={selectedImage.url} alt={selectedImage.title} style={{
+              maxWidth: '100%',
+              maxHeight: 'calc(90vh - 100px)',
+              objectFit: 'contain'
+            }} />
+            <div style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>
+              {selectedImage.title}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

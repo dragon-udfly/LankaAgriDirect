@@ -1,378 +1,373 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAdminAuth } from '../context/AuthContext';
+import '../styles/AccountSettings.css';
 
 const AccountSettingsPage = () => {
   const { admin } = useAdminAuth();
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'security'>('profile');
+  const [activeTab, setActiveTab] = useState<'password' | 'email' | 'add-admin'>('password');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Profile Form
-  const [profileData, setProfileData] = useState({
-    name: admin?.name || '',
-    email: admin?.email || '',
-  });
-
-  // Password Form
-  const [passwordData, setPasswordData] = useState({
+  // Change Password Form
+  const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
-  // Security Settings
-  const [security, setSecurity] = useState({
-    twoFactorEnabled: false,
-    loginAlerts: true,
-    sessionTimeout: 30,
+  // Add Email Form
+  const [emailForm, setEmailForm] = useState({
+    email: '',
   });
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProfileData({ ...profileData, [e.target.name]: e.target.value });
-  };
+  // Add Admin Form
+  const [adminForm, setAdminForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'Moderator',
+  });
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
-  };
-
-  const handleProfileSubmit = async (e: React.FormEvent) => {
+  // Handle Change Password
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      // TODO: Call API to update profile
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
-    } finally {
-      setLoading(false);
-    }
-  };
+    setError('');
+    setMessage('');
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match!' });
+    if (!passwordForm.currentPassword) {
+      setError('❌ Please enter your current password');
       return;
     }
-    if (passwordData.newPassword.length < 8) {
-      setMessage({ type: 'error', text: 'Password must be at least 8 characters!' });
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setError('❌ New passwords do not match');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      setError('❌ Password must be at least 8 characters');
       return;
     }
 
     setLoading(true);
     try {
-      // TODO: Call API to update password
-      setMessage({ type: 'success', text: 'Password changed successfully!' });
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+      const response = await fetch('/api/v1/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        try {
+          const data = await response.json();
+          throw new Error(data.message || `Error: ${response.status}`);
+        } catch {
+          throw new Error(`Server error: ${response.status}`);
+        }
+      }
+
+      const data = await response.json();
+      setMessage('✅ ' + (data.message || 'Password changed successfully!'));
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      setError('❌ ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSecurityChange = (key: string, value: any) => {
-    setSecurity({ ...security, [key]: value });
-  };
+  // Handle Add Email
+  const handleAddEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
 
-  const saveSecuritySettings = async () => {
+    if (!emailForm.email) {
+      setError('❌ Please enter an email address');
+      return;
+    }
+
+    if (!emailForm.email.includes('@')) {
+      setError('❌ Please enter a valid email');
+      return;
+    }
+
     setLoading(true);
     try {
-      // TODO: Call API to save security settings
-      setMessage({ type: 'success', text: 'Security settings updated!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+      const response = await fetch('/api/v1/admin/add-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        },
+        body: JSON.stringify({
+          email: emailForm.email,
+        }),
+      });
+
+      if (!response.ok) {
+        try {
+          const data = await response.json();
+          throw new Error(data.message || `Error: ${response.status}`);
+        } catch {
+          throw new Error(`Server error: ${response.status}`);
+        }
+      }
+
+      const data = await response.json();
+      setMessage('✅ ' + (data.message || 'Email added successfully!'));
+      setEmailForm({ email: '' });
+    } catch (err) {
+      setError('❌ ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Add Admin
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+
+    if (!adminForm.name) {
+      setError('❌ Please enter admin name');
+      return;
+    }
+
+    if (!adminForm.email) {
+      setError('❌ Please enter admin email');
+      return;
+    }
+
+    if (!adminForm.email.includes('@')) {
+      setError('❌ Please enter a valid email');
+      return;
+    }
+
+    if (!adminForm.password) {
+      setError('❌ Please enter a temporary password');
+      return;
+    }
+
+    if (adminForm.password.length < 8) {
+      setError('❌ Password must be at least 8 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/v1/admin/create-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        },
+        body: JSON.stringify({
+          name: adminForm.name,
+          email: adminForm.email,
+          password: adminForm.password,
+          role: adminForm.role,
+        }),
+      });
+
+      if (!response.ok) {
+        try {
+          const data = await response.json();
+          throw new Error(data.message || `Error: ${response.status}`);
+        } catch {
+          throw new Error(`Server error: ${response.status}`);
+        }
+      }
+
+      const data = await response.json();
+      setMessage(`✅ ${data.message || 'Admin account created successfully!'}`);
+      setAdminForm({ name: '', email: '', password: '', role: 'Moderator' });
+    } catch (err) {
+      setError('❌ ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page">
-      <div className="page-header" style={{ marginBottom: 28 }}>
-        <h3>⚙️ Account Settings</h3>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-          Manage your profile, security, and account preferences
-        </p>
-      </div>
-
-      {/* Alert Messages */}
-      {message.text && (
-        <div className={`alert alert-${message.type}`} style={{ marginBottom: 20 }}>
-          <span>{message.type === 'success' ? '✓' : '✖'}</span>
-          {message.text}
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="settings-tabs" style={{ marginBottom: 28 }}>
-        {(['profile', 'password', 'security'] as const).map(tab => (
+    <div className="account-settings">
+      <div className="settings-container">
+        <div className="settings-sidebar">
           <button
-            key={tab}
-            className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              background: activeTab === tab ? 'var(--primary)' : 'transparent',
-              color: activeTab === tab ? '#fff' : 'var(--text)',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
-              fontWeight: 500,
-              marginRight: 8,
-              transition: 'all .15s',
-            }}>
-            {tab === 'profile' && '👤 Profile'}
-            {tab === 'password' && '🔐 Password'}
-            {tab === 'security' && '🛡️ Security'}
+            className={`settings-tab ${activeTab === 'password' ? 'active' : ''}`}
+            onClick={() => setActiveTab('password')}
+          >
+            🔐 Change Password
           </button>
-        ))}
-      </div>
-
-      {/* Profile Tab */}
-      {activeTab === 'profile' && (
-        <div className="card" style={{ maxWidth: 600 }}>
-          <h4 style={{ marginBottom: 20, fontSize: 16, fontWeight: 700 }}>Personal Information</h4>
-          <form onSubmit={handleProfileSubmit}>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={profileData.name}
-                onChange={handleProfileChange}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>
-                Email Address
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={profileData.email}
-                onChange={handleProfileChange}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                }}
-              />
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-                We'll send verification to this email before updating
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary"
-              style={{ width: '100%', opacity: loading ? 0.6 : 1 }}>
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Password Tab */}
-      {activeTab === 'password' && (
-        <div className="card" style={{ maxWidth: 600 }}>
-          <h4 style={{ marginBottom: 20, fontSize: 16, fontWeight: 700 }}>Change Password</h4>
-          <form onSubmit={handlePasswordSubmit}>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>
-                Current Password
-              </label>
-              <input
-                type="password"
-                name="currentPassword"
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>
-                New Password
-              </label>
-              <input
-                type="password"
-                name="newPassword"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                }}
-              />
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-                At least 8 characters with uppercase, lowercase, and numbers
-              </p>
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary"
-              style={{ width: '100%', opacity: loading ? 0.6 : 1 }}>
-              {loading ? 'Updating...' : 'Update Password'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Security Tab */}
-      {activeTab === 'security' && (
-        <div className="card" style={{ maxWidth: 600 }}>
-          <h4 style={{ marginBottom: 24, fontSize: 16, fontWeight: 700 }}>Security Settings</h4>
-
-          {/* Two Factor Authentication */}
-          <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div>
-                <h5 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Two-Factor Authentication</h5>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Add an extra layer of security to your account
-                </p>
-              </div>
-              <label style={{ position: 'relative', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={security.twoFactorEnabled}
-                  onChange={(e) => handleSecurityChange('twoFactorEnabled', e.target.checked)}
-                  style={{ width: 20, height: 20, cursor: 'pointer' }}
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Login Alerts */}
-          <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div>
-                <h5 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Login Alerts</h5>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Get notified of suspicious login attempts
-                </p>
-              </div>
-              <label style={{ position: 'relative', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={security.loginAlerts}
-                  onChange={(e) => handleSecurityChange('loginAlerts', e.target.checked)}
-                  style={{ width: 20, height: 20, cursor: 'pointer' }}
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Session Timeout */}
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, display: 'block' }}>
-              Session Timeout (minutes)
-            </label>
-            <select
-              value={security.sessionTimeout}
-              onChange={(e) => handleSecurityChange('sessionTimeout', parseInt(e.target.value))}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 14,
-                fontFamily: 'inherit',
-              }}>
-              <option value={15}>15 minutes</option>
-              <option value={30}>30 minutes</option>
-              <option value={60}>1 hour</option>
-              <option value={120}>2 hours</option>
-              <option value={480}>8 hours</option>
-            </select>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-              You'll be logged out after this period of inactivity
-            </p>
-          </div>
-
           <button
-            onClick={saveSecuritySettings}
-            disabled={loading}
-            className="btn btn-primary"
-            style={{ width: '100%', opacity: loading ? 0.6 : 1 }}>
-            {loading ? 'Saving...' : 'Save Security Settings'}
+            className={`settings-tab ${activeTab === 'email' ? 'active' : ''}`}
+            onClick={() => setActiveTab('email')}
+          >
+            📧 Add Email
+          </button>
+          <button
+            className={`settings-tab ${activeTab === 'add-admin' ? 'active' : ''}`}
+            onClick={() => setActiveTab('add-admin')}
+          >
+            👤 Add Another Admin
           </button>
         </div>
-      )}
 
-      {/* Account Info Section */}
-      <div style={{ marginTop: 40 }}>
-        <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>
-          Account Information
-        </h4>
-        <div className="card" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-          <div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Account ID</p>
-            <p style={{ fontSize: 14, fontWeight: 500 }}>{admin?.id || 'N/A'}</p>
+        <div className="settings-content">
+          {/* Status Messages */}
+          {message && <div className="success-message">{message}</div>}
+          {error && <div className="error-message">{error}</div>}
+
+          {/* Current Admin Info */}
+          <div className="admin-info-card">
+            <h3>Current Admin</h3>
+            <p><strong>Name:</strong> {admin?.name}</p>
+            <p><strong>Email:</strong> {admin?.email}</p>
+            <p><strong>Role:</strong> <span className="role-badge">{admin?.role}</span></p>
           </div>
-          <div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Account Status</p>
-            <span className="badge badge-active">✓ Active</span>
-          </div>
-          <div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Member Since</p>
-            <p style={{ fontSize: 14, fontWeight: 500 }}>Jan 2024</p>
-          </div>
+
+          {/* Change Password Tab */}
+          {activeTab === 'password' && (
+            <div className="settings-form">
+              <h2>🔐 Change Password</h2>
+              <p className="form-description">Secure your account by updating your password regularly.</p>
+
+              <form onSubmit={handleChangePassword}>
+                <div className="form-group">
+                  <label>Current Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter your current password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) =>
+                      setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter your new password (min. 8 characters)"
+                    value={passwordForm.newPassword}
+                    onChange={(e) =>
+                      setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Confirm New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Confirm your new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? '⏳ Updating...' : '🔒 Change Password'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Add Email Tab */}
+          {activeTab === 'email' && (
+            <div className="settings-form">
+              <h2>📧 Add Email Address</h2>
+              <p className="form-description">Add an alternate email address to your admin account for notifications and recovery.</p>
+
+              <form onSubmit={handleAddEmail}>
+                <div className="form-group">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={emailForm.email}
+                    onChange={(e) => setEmailForm({ email: e.target.value })}
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? '⏳ Adding...' : '✉️ Add Email'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Add Admin Tab */}
+          {activeTab === 'add-admin' && (
+            <div className="settings-form">
+              <h2>👤 Create New Admin Account</h2>
+              <p className="form-description">Invite another admin to manage the platform. Only Super Admins can create new admins.</p>
+
+              <form onSubmit={handleAddAdmin}>
+                <div className="form-group">
+                  <label>Admin Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter admin full name"
+                    value={adminForm.name}
+                    onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Admin Email</label>
+                  <input
+                    type="email"
+                    placeholder="Enter admin email address"
+                    value={adminForm.email}
+                    onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Temporary Password</label>
+                  <input
+                    type="password"
+                    placeholder="Set temporary password (min. 8 characters)"
+                    value={adminForm.password}
+                    onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Role</label>
+                  <select
+                    value={adminForm.role}
+                    onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}
+                  >
+                    <option value="Moderator">Moderator (Content Moderation)</option>
+                    <option value="Admin">Admin (Full Access)</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? '⏳ Creating...' : '➕ Create Admin'}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>

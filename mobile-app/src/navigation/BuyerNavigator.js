@@ -5,6 +5,7 @@ import {Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import HomeScreen from '../screens/buyer/HomeScreen';
 import ProductDetailScreen from '../screens/buyer/ProductDetailScreen';
+import ProducerDetailScreen from '../screens/buyer/ProducerDetailScreen';
 import BookmarksScreen from '../screens/buyer/BookmarksScreen';
 import {COLORS} from '../theme/colors';
 import {useAuth} from '../context/AuthContext';
@@ -64,6 +65,33 @@ const HomeStack = () => {
         component={ProductDetailScreen}
         options={{title: 'Product Details'}}
       />
+      <Stack.Screen
+        name="ProducerDetail"
+        component={ProducerDetailScreen}
+        options={{title: 'Producer Profile'}}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const BookmarksStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {backgroundColor: COLORS.primary},
+        headerTintColor: COLORS.white,
+        headerTitleStyle: {fontWeight: '700'},
+      }}>
+      <Stack.Screen
+        name="BookmarksList"
+        component={BookmarksScreen}
+        options={{title: 'My Bookmarks'}}
+      />
+      <Stack.Screen
+        name="ProducerDetail"
+        component={ProducerDetailScreen}
+        options={{title: 'Producer Profile'}}
+      />
     </Stack.Navigator>
   );
 };
@@ -91,15 +119,10 @@ export const BuyerNavigator = () => (
     />
     <Tab.Screen
       name="Bookmarks"
-      component={BookmarksScreen}
+      component={BookmarksStack}
       options={{
         tabBarLabel: 'Saved',
         tabBarIcon: ({color, size}) => <Ionicons name="bookmark-outline" size={size} color={color} />,
-        headerShown: true,
-        headerStyle: {backgroundColor: COLORS.primary},
-        headerTintColor: COLORS.white,
-        headerTitle: 'My Bookmarks',
-        headerTitleStyle: {fontWeight: '700'},
       }}
     />
   </Tab.Navigator>

@@ -7,11 +7,13 @@ import DashboardPage from './pages/DashboardPage';
 import ProducersPage from './pages/ProducersPage';
 import ProductsPage from './pages/ProductsPage';
 import AuditLogsPage from './pages/AuditLogsPage';
+import NewRegistrationsPage from './pages/NewRegistrationsPage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 
 const PAGE_TITLES: Record<string, string> = {
   dashboard: 'Dashboard Overview',
   producers: 'Producer Management',
+  'new-registrations': 'New User Registrations',
   products: 'Content Moderation',
   'audit-logs': 'Audit Logs',
   'account-settings': 'Account Settings',
@@ -25,12 +27,13 @@ const AdminApp = () => {
 
   const renderPage = () => {
     switch (page) {
-      case 'dashboard':  return <DashboardPage />;
-      case 'producers':  return <ProducersPage />;
-      case 'products':   return <ProductsPage />;
-      case 'audit-logs': return <AuditLogsPage />;
-      case 'account-settings': return <AccountSettingsPage />;
-      default:           return <DashboardPage />;
+      case 'dashboard':         return <DashboardPage />;
+      case 'new-registrations': return <NewRegistrationsPage />;
+      case 'producers':         return <ProducersPage />;
+      case 'products':          return <ProductsPage />;
+      case 'audit-logs':        return <AuditLogsPage />;
+      case 'account-settings':  return <AccountSettingsPage />;
+      default:                  return <DashboardPage />;
     }
   };
 

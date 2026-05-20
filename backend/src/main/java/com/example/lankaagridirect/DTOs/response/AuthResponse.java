@@ -10,6 +10,7 @@ public class AuthResponse {
     private String id;
     private String name;
     private String role;
+    private String email;            // null for producers without email
     private String verificationStatus; // null for admins
     private String profilePictureUrl;  // null for admins
 }

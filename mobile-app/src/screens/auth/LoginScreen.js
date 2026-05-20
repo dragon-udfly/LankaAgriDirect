@@ -65,18 +65,18 @@ const LoginScreen = ({navigation}) => {
         <View style={styles.card}>
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>
-            Sign in with your NIC, email, or phone number
+            Sign in with your NIC
           </Text>
 
           <AlertBox message={error} type="error" />
 
           <AppInput
-            label="NIC / Email / Phone"
+            label="NIC"
             value={loginId}
             onChangeText={setLoginId}
-            placeholder="Enter NIC, email or phone"
+            placeholder="Enter your NIC"
             autoCapitalize="none"
-            keyboardType="email-address"
+            keyboardType="numeric"
           />
           <AppInput
             label="Password"

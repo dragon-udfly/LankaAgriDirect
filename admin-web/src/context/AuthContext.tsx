@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
-interface AdminUser { id: string; name: string; role: string; }
+interface AdminUser { id: string; name: string; email: string; role: string; }
 interface AuthCtx { admin: AdminUser | null; signIn: (token: string, user: AdminUser) => void; signOut: () => void; }
 
 const AuthContext = createContext<AuthCtx | null>(null);
