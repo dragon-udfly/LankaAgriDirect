@@ -11,6 +11,7 @@ import {COLORS, FONTS, SPACING, RADIUS, SHADOW} from '../theme/colors';
 
 const {width} = Dimensions.get('window');
 const CARD_WIDTH = width - SPACING.md * 2;
+const IMAGE_HEIGHT = Math.min(280, width * 0.7); // Responsive height based on screen width
 
 /**
  * Product card used in the buyer home feed.
@@ -84,7 +85,7 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     width: '100%',
-    height: 180,
+    height: IMAGE_HEIGHT,
     position: 'relative',
   },
   image: {width: '100%', height: '100%'},
@@ -119,18 +120,19 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   content: {padding: SPACING.md},
-  name: {fontSize: 17, ...FONTS.semiBold, color: COLORS.text, marginBottom: 2},
-  store: {fontSize: 13, color: COLORS.textSecondary, marginBottom: SPACING.sm},
+  name: {fontSize: 18, ...FONTS.semiBold, color: COLORS.text, marginBottom: 4},
+  store: {fontSize: 14, color: COLORS.textSecondary, marginBottom: SPACING.sm, fontWeight: '500'},
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    marginTop: SPACING.xs,
   },
-  price: {fontSize: 18, ...FONTS.bold, color: COLORS.primary},
-  unit: {fontSize: 12, color: COLORS.textSecondary},
-  locationRow: {flexDirection: 'row', alignItems: 'center', gap: 2},
-  locationIcon: {fontSize: 12},
-  district: {fontSize: 12, color: COLORS.textSecondary, ...FONTS.medium},
+  price: {fontSize: 20, ...FONTS.bold, color: COLORS.primary},
+  unit: {fontSize: 13, color: COLORS.textSecondary, marginTop: 2},
+  locationRow: {flexDirection: 'row', alignItems: 'center', gap: 4},
+  locationIcon: {fontSize: 14},
+  district: {fontSize: 13, color: COLORS.textSecondary, ...FONTS.medium},
 });
 
 export default ProductCard;
