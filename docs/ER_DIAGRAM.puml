@@ -1,0 +1,172 @@
+@startuml LankaAgriDirect_ER_Diagram
+!define ENTITY_COLOR #FF9999
+!define RELATIONSHIP_COLOR #99CCFF
+!define KEY_COLOR #FFD700
+
+entity Producer {
+  * id : String <<PK>>
+  --
+  firstName : String
+  lastName : String
+  * nic : String <<UNIQUE>>
+  nicPhotoUrl : String (JSON array for front/back)
+  profilePictureUrl : String
+  businessPhone : String
+  mobilePhone : String
+  * email : String <<UNIQUE,SPARSE>>
+  storeTitle : String
+  operatingDays : List<String>
+  startTime : String
+  endTime : String
+  latitude : Double
+  longitude : Double
+  locationDescription : String
+  homeAddress : String
+  storeAddress : String
+  * district : String <<INDEXED>>
+  * province : String <<INDEXED>>
+  gnDivision : String
+  businessType : String (small-scale, home-gardener)
+  * verificationStatus : String = "pending" <<INDEXED>>
+  password : String (hashed)
+  isDeleted : Boolean = false
+  createdAt : LocalDateTime
+  modifiedAt : LocalDateTime
+  --
+  Collection: "producers"
+}
+
+entity Product {
+  * id : String <<PK>>
+  --
+  * producerId : String <<FK,INDEXED>>
+  * name : String
+  * category : String <<INDEXED>>
+  description : String
+  * unitPrice : Double
+  * unitType : String
+  imageUrls : List<String>
+  isSoldOut : Boolean = false
+  * productStatus : String = "active" <<INDEXED>>
+  isDeleted : Boolean = false
+  createdAt : LocalDateTime
+  modifiedAt : LocalDateTime
+  --
+  Collection: "products"
+}
+
+entity Category {
+  * id : String <<PK>>
+  --
+  * name : String
+  isActive : Boolean = true
+  createdAt : LocalDateTime
+  --
+  Collection: "categories"
+}
+
+entity Admin {
+  * id : String <<PK>>
+  --
+  name : String
+  * username : String <<UNIQUE>>
+  * email : String <<UNIQUE>>
+  password : String (hashed)
+  role : String = "Moderator" (Admin, Moderator)
+  isDeleted : Boolean = false
+  createdAt : LocalDateTime
+  modifiedAt : LocalDateTime
+  --
+  Collection: "admins"
+}
+
+entity AuditLog {
+  * id : String <<PK>>
+  --
+  * adminId : String <<FK,INDEXED>>
+  action : String (e.g., VERIFY_PRODUCER, BLOCK_PRODUCER)
+  description : String
+  performedAt : LocalDateTime
+  --
+  Collection: "admin_audit_logs"
+  Append-only: No updates/deletes allowed
+}
+
+entity ProducerAuditLog {
+  * id : String <<PK>>
+  --
+  * producerId : String <<FK,INDEXED>>
+  action : String (e.g., CREATE_PRODUCT, TOGGLE_SOLD_OUT, UPDATE_PROFILE)
+  description : String
+  performedAt : LocalDateTime
+  --
+  Collection: "producer_audit_logs"
+  Append-only: No updates/deletes allowed
+}
+
+entity LeadAnalytic {
+  * id : String <<PK>>
+  --
+  * producerId : String <<FK,INDEXED>>
+  timestamp : LocalDateTime
+  actionType : String (clicked_call, viewed_address)
+  buyerDeviceId : String
+  --
+  Collection: "lead_analytics"
+}
+
+' Relationships
+Producer ||--o{ Product : "has_many"
+Admin ||--o{ AuditLog : "generates"
+Producer ||--o{ ProducerAuditLog : "generates"
+Producer ||--o{ LeadAnalytic : "receives"
+
+note right of Producer
+  Primary user for selling agricultural products
+  - Verification workflow: pending → verified/blocked
+  - Stored as NoSQL document in MongoDB
+  - Indexed fields: nic, email, district, province, verificationStatus
+end note
+
+note right of Product
+  Agricultural products listed by producers
+  - Categories stored as string (can reference Category collection)
+  - Multiple images supported (list of URLs)
+  - Track sold-out status and active/suspended state
+end note
+
+note right of Category
+  Product category master list
+  - Used for filtering and searching
+  - Can be flagged as inactive
+end note
+
+note right of Admin
+  Admin/Moderator users for platform management
+  - Two roles: Admin, Moderator
+  - Manages producer verification, blocking, deletion
+end note
+
+note right of AuditLog
+  Immutable log of all admin actions
+  - Append-only collection (no updates/deletes)
+  - Actions: verify, block, unblock, delete producers
+  - Used for compliance and audit trail
+end note
+
+note right of ProducerAuditLog
+  Immutable log of producer self-actions
+  - Append-only collection (no updates/deletes)
+  - Actions: create/update products, profile changes
+  - Used for tracking producer activity
+end note
+
+note right of LeadAnalytic
+  Analytics for buyer interactions
+  - Tracks calls (clicked_call)
+  - Tracks map views (viewed_address)
+  - Used for analytics and producer insights
+  - Device-based tracking for anonymous buyers
+end note
+
+@enduml
