@@ -216,6 +216,12 @@ const RegisterScreen = ({navigation}) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         style={Platform.OS === 'web' ? {flex: 1} : undefined}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
+          <Text style={styles.backIcon}>← Back</Text>
+        </TouchableOpacity>
+
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Join Lanka Agri-Direct as a Producer</Text>
 
@@ -502,6 +508,17 @@ const styles = StyleSheet.create({
     ...FONTS.body,
     color: COLORS.textLight,
     marginBottom: SPACING.xxl,
+  },
+  backButton: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
+    alignSelf: 'flex-start',
+  },
+  backIcon: {
+    fontSize: 14,
+    color: COLORS.primary,
+    ...FONTS.semiBold,
   },
   form: {
     width: '100%',
