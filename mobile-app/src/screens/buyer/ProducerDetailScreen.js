@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getProducerDetails, getProducerProducts} from '../../api/producerApi';
@@ -99,9 +100,14 @@ const ProducerDetailScreen = ({route, navigation}) => {
 
   const handleViewAddress = () => {
     if (producer?.latitude && producer?.longitude) {
-      const url = `geo:${producer.latitude},${producer.longitude}`;
+      let url;
+      if (Platform.OS === 'web') {
+        url = `https://maps.google.com/?q=${producer.latitude},${producer.longitude}`;
+      } else {
+        url = `geo:${producer.latitude},${producer.longitude}`;
+      }
       Linking.openURL(url).catch(() =>
-        Alert.alert('Cannot Open Maps', 'Please install a maps app.'),
+        Alert.alert('Cannot Open Maps', 'Please install a maps app or try again.'),
       );
     }
   };

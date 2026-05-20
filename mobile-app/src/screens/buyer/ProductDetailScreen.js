@@ -9,6 +9,7 @@ import {
   Linking,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getProductById} from '../../api/productApi';
@@ -106,9 +107,14 @@ const ProductDetailScreen = ({route, navigation}) => {
   const handleViewAddress = async () => {
     await trackAddressView(product.producerId, 'anonymous').catch(() => {});
     if (product?.producerLatitude && product?.producerLongitude) {
-      const url = `geo:${product.producerLatitude},${product.producerLongitude}`;
+      let url;
+      if (Platform.OS === 'web') {
+        url = `https://maps.google.com/?q=${product.producerLatitude},${product.producerLongitude}`;
+      } else {
+        url = `geo:${product.producerLatitude},${product.producerLongitude}`;
+      }
       Linking.openURL(url).catch(() =>
-        Alert.alert('Cannot Open Maps', 'Please install a maps app.'),
+        Alert.alert('Cannot Open Maps', 'Please install a maps app or try again.'),
       );
     }
   };
