@@ -142,7 +142,6 @@ const HomeScreen = ({navigation}) => {
             </View>
           </TouchableOpacity>
         ))}
-        ))}
       </ScrollView>
 
       {/* Error State */}
