@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getProducers, verifyProducer, blockProducer } from '../api/adminApi';
+import { getProducers, verifyProducer, blockProducer, unblockProducer, deleteProducer } from '../api/adminApi';
 
 const ProducersPage = () => {
   const [producers, setProducers] = useState<any[]>([]);
@@ -9,7 +9,9 @@ const ProducersPage = () => {
   const [success, setSuccess] = useState('');
   const [blockReason, setBlockReason] = useState('');
   const [blockingId, setBlockingId] = useState<string | null>(null);
+  const [unblockingId, setUnblockingId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<{ url: string; title: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true); setError('');
@@ -51,6 +53,22 @@ const ProducersPage = () => {
     } catch (err: any) { setError(err.message); }
   };
 
+  const handleUnblock = async (id: string, name: string) => {
+    try {
+      await unblockProducer(id);
+      setUnblockingId(null);
+      flash(`🔓 ${name} has been unblocked.`); load();
+    } catch (err: any) { setError(err.message); }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    try {
+      await deleteProducer(id);
+      setDeletingId(null);
+      flash(`🗑️ ${name} has been deleted.`); load();
+    } catch (err: any) { setError(err.message); }
+  };
+
   return (
     <div className="page">
       <div className="page-header"><h3>👩‍🌾 Producer Management</h3></div>
@@ -88,9 +106,12 @@ const ProducersPage = () => {
                       <td><span className={`badge badge-${p.verificationStatus}`}>{p.verificationStatus}</span></td>
                       <td>{new Date(p.createdAt).toLocaleDateString()}</td>
                       <td>
-                        <div className="btn-group">
+                        <div className="btn-group" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {p.verificationStatus === 'pending' && (
                             <button className="btn btn-success btn-sm" onClick={() => handleVerify(p.id, p.firstName)}>✅ Verify</button>
+                          )}
+                          {p.verificationStatus === 'blocked' && (
+                            <button className="btn btn-info btn-sm" onClick={() => setUnblockingId(p.id)}>🔓 Unblock</button>
                           )}
                           {p.verificationStatus !== 'blocked' && (
                             <button className="btn btn-danger btn-sm" onClick={() => setBlockingId(p.id)}>🚫 Block</button>
@@ -109,6 +130,9 @@ const ProducersPage = () => {
                               )}
                             </>
                           )}
+                          <button className="btn btn-danger btn-sm" onClick={() => setDeletingId(p.id)} title="Delete this producer permanently">
+                            🗑️ Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -124,6 +148,28 @@ const ProducersPage = () => {
                             />
                             <button className="btn btn-danger btn-sm" onClick={() => handleBlock(p.id, p.firstName)}>Confirm Block</button>
                             <button className="btn btn-secondary btn-sm" onClick={() => { setBlockingId(null); setBlockReason(''); }}>Cancel</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {unblockingId === p.id && (
+                      <tr style={{ background: '#F0F8FF' }}>
+                        <td colSpan={7} style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ flex: 1, color: '#1976D2', fontWeight: 'bold' }}>Are you sure you want to unblock this producer? They will regain access to the platform.</span>
+                            <button className="btn btn-info btn-sm" onClick={() => handleUnblock(p.id, p.firstName)}>Yes, Unblock</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setUnblockingId(null)}>Cancel</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {deletingId === p.id && (
+                      <tr style={{ background: '#FFE8E8' }}>
+                        <td colSpan={7} style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ flex: 1, color: '#D32F2F', fontWeight: 'bold' }}>Are you sure you want to permanently delete this producer? This action cannot be undone.</span>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id, p.firstName)}>Yes, Delete</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setDeletingId(null)}>Cancel</button>
                           </div>
                         </td>
                       </tr>

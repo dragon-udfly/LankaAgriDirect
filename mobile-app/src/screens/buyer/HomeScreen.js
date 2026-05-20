@@ -19,6 +19,16 @@ import {COLORS, FONTS, SPACING, RADIUS} from '../../theme/colors';
 
 const CATEGORIES = ['All', 'Vegetables', 'Fruits', 'Herbal Products', 'Rice', 'Fish', 'Meat'];
 
+const CATEGORY_ICONS = {
+  'All': '🌾',
+  'Vegetables': '🥬',
+  'Fruits': '🍎',
+  'Herbal Products': '🌿',
+  'Rice': '🍚',
+  'Fish': '🐟',
+  'Meat': '🍗',
+};
+
 const HomeScreen = ({navigation}) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,14 +130,18 @@ const HomeScreen = ({navigation}) => {
               styles.chip,
               selectedCategory === cat && styles.chipActive,
             ]}>
-            <Text
-              style={[
-                styles.chipText,
-                selectedCategory === cat && styles.chipTextActive,
-              ]}>
-              {cat}
-            </Text>
+            <View style={styles.chipContent}>
+              <Text style={styles.chipIcon}>{CATEGORY_ICONS[cat]}</Text>
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedCategory === cat && styles.chipTextActive,
+                ]}>
+                {cat}
+              </Text>
+            </View>
           </TouchableOpacity>
+        ))}
         ))}
       </ScrollView>
 
@@ -215,26 +229,57 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     ...FONTS.regular,
   },
-  categories: {maxHeight: 52},
+  categories: {
+    maxHeight: 60,
+    backgroundColor: COLORS.background,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
   categoriesContent: {
     paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
     gap: SPACING.sm,
     alignItems: 'center',
   },
   chip: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderWidth: 1.5,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
   },
   chipActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.3,
+    elevation: 4,
   },
-  chipText: {fontSize: 13, color: COLORS.textSecondary, ...FONTS.medium},
-  chipTextActive: {color: COLORS.white},
+  chipContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  chipIcon: {
+    fontSize: 16,
+  },
+  chipText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    ...FONTS.semiBold,
+    letterSpacing: 0.5,
+  },
+  chipTextActive: {
+    color: COLORS.white,
+    fontSize: 14,
+    ...FONTS.semiBold,
+  },
   list: {padding: SPACING.md, paddingTop: SPACING.sm},
   centered: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl},
   loadingText: {marginTop: SPACING.md, color: COLORS.textSecondary},

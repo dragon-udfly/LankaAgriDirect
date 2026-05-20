@@ -149,6 +149,7 @@ tr:hover td { background: #fafafa; }
 .btn-success   { background: var(--success); color: #fff; }
 .btn-danger    { background: var(--error); color: #fff; }
 .btn-warning   { background: var(--warning); color: #fff; }
+.btn-info      { background: #3B82F6; color: #fff; }
 .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 .btn-sm { padding: 5px 10px; font-size: 12px; }
 .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
